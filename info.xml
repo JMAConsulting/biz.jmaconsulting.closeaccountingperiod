@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<extension key="biz.jmaconsulting.closeaccountingperiod" type="module">
+  <file>closeaccountingperiod</file>
+  <name>Close Accounting Period</name>
+  <description>Close Accounting Period</description>
+  <license>AGPL-3.0</license>
+  <maintainer>
+    <author>Joe Murray</author>
+    <email>joe.murray@jmaconsulting.biz</email>
+  </maintainer>
+  <urls>
+    <url desc="Main Extension Page">http://FIXME</url>
+    <url desc="Documentation">http://FIXME</url>
+    <url desc="Support">http://FIXME</url>
+    <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
+  </urls>
+  <releaseDate>2016-12-06</releaseDate>
+  <version>1.0</version>
+  <develStage>alpha</develStage>
+  <compatibility>
+    <ver>4.7</ver>
+  </compatibility>
+  <comments></comments>
+  <civix>
+    <namespace>CRM/CloseAccountingPeriod</namespace>
+  </civix>
+</extension>
