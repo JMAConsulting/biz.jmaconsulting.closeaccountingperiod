@@ -190,6 +190,36 @@ function closeaccountingperiod_civicrm_permission(&$permissions) {
  *
  */
 function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
+  if (!CRM_Core_Permission::check('administer Accounting')) {
+    if ("CRM_Activity_Form_Search" == $formName) {
+      $info = civicrm_api3('Activity', 'getoptions', array('field' => 'activity_type_id'));
+      $allowedActivities = array_diff($info['values'], array('Close Accounting Period'));
+      $form->addSelect('activity_type_id', array(
+        'entity' => 'activity',
+        'label' => ts('Activity Type(s)'),
+        'multiple' => 'multiple',
+        'option_url' => NULL,
+        'placeholder' => ts('- any -'),
+        'options' => $allowedActivities)
+      );
+    }
+    if ("CRM_Activity_Form_Activity" == $formName) {
+      $allowedActivities = array_diff($form->_fields['followup_activity_type_id']['attributes'], array('Close Accounting Period'));
+
+      $form->add('select', 'activity_type_id', ts('Activity Type'),
+        array('' => '- ' . ts('select') . ' -') + $allowedActivities,
+        FALSE, array(
+          'onchange' => "CRM.buildCustomData( 'Activity', this.value );",
+          'class' => 'crm-select2 required',
+        )
+      );
+
+      if ($form->_action & CRM_Core_Action::VIEW) {
+        CRM_Utils_System::permissionDenied();
+        CRM_Utils_System::civiExit();
+      }
+    }
+  }
   if ('CRM_Financial_Form_FinancialAccount' == $formName) {
     // foolish hack since CRM_Financial_Form_FinancialAccount is invoked twice
     static $alreadyInvoked = FALSE;
