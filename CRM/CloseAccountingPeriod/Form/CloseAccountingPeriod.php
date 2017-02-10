@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.7                                                |
+ | Close Accounting Period Extension                                  |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2016                                |
+ | Copyright (C) 2016-2017 JMA Consulting                             |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -27,7 +27,7 @@
 /**
  * This class generates form components for closing an account period.
  */
-class CRM_CloseAccountingPeriod_Form_CloseAccPeriod extends CRM_Core_Form {
+class CRM_CloseAccountingPeriod_Form_CloseAccountingPeriod extends CRM_Core_Form {
 
   /**
    * Contains list of Organization linked with financial account.
@@ -84,7 +84,7 @@ class CRM_CloseAccountingPeriod_Form_CloseAccPeriod extends CRM_Core_Form {
         ),
       )
     );
-    $this->addFormRule(array('CRM_CloseAccountingPeriod_Form_CloseAccPeriod', 'formRule'), $this);
+    $this->addFormRule(array('CRM_CloseAccountingPeriod_Form_CloseAccountingPeriod', 'formRule'), $this);
   }
 
   /**
@@ -127,7 +127,7 @@ class CRM_CloseAccountingPeriod_Form_CloseAccPeriod extends CRM_Core_Form {
   public function postProcess() {
     // store the submitted values in an array
     $params = $this->controller->exportValues($this->_name);
-    $redirectURL = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::createClosingPeriodActivity($params);
+    $redirectURL = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::createClosePeriodActivity($params);
     CRM_Core_Session::setStatus(ts("Accounting Period has been closed successfully!"), ts('Success'), 'success');
     CRM_Core_Session::singleton()->replaceUserContext($redirectURL);
   }

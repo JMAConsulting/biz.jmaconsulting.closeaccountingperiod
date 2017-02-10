@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.7                                                |
+ | Close Accounting Period Extension                                  |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2016                                |
+ | Copyright (C) 2016-2017 JMA Consulting                             |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -39,9 +39,9 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriodTest extends CiviUnitTe
   }
 
   /**
-   * Test for createTrialBalanceExport().
+   * Test for exportTrialBalanceAndClosePeriod().
    */
-  public function testcreateTrialBalanceExport() {
+  public function testExportTrialBalanceAndClosePeriod() {
     $cid = $this->individualCreate();
     $params = array(
       'contact_id' => $cid,
@@ -55,7 +55,7 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriodTest extends CiviUnitTe
       'id' => $contribution->id,
     );
     $contribution = CRM_Contribute_BAO_Contribution::create($params);
-    $fileName = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::createTrialBalanceExport();
+    $fileName = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::exportTrialBalanceAndClosePeriod();
     require_once 'CiviTest/CiviReportTestCase.php';
     $obj = new CiviReportTestCase();
     $csvArray = $obj->getArrayFromCsv($fileName);

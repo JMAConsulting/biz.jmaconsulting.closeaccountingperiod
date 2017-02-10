@@ -162,7 +162,7 @@ function closeaccountingperiod_civicrm_navigationMenu(&$menu) {
     'label' => ts('Close Accounting Period', array('domain' => 'biz.jmaconsulting.closeaccountingperiod')),
     'name' => 'close_accounting_period',
     'url' => 'civicrm/admin/contribute/closeaccperiod?reset=1',
-    'permission' => 'access CiviContribute,administer CiviCRM,administer Accounting',
+    'permission' => 'access CiviContribute,administer Accounting',
     'operator' => 'AND',
     'separator' => 0,
   ));
@@ -209,11 +209,11 @@ function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
         'financial_account_type_id',
         array('labelColumn' => 'name')
       );
-      $limitedAccount = array(
+      $filterAccounts = array(
         array_search('Asset', $financialAccountType),
         array_search('Liability', $financialAccountType),
       );
-      $form->assign('limitedAccount', json_encode($limitedAccount));
+      $form->assign('filterAccounts', json_encode($filterAccounts));
       CRM_Core_Region::instance('page-body')->add(array(
         'template' => 'CRM/Financial/Form/FinancialAccountExtra.tpl',
       ));

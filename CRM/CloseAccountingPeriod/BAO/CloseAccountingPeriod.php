@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.7                                                |
+ | Close Accounting Period Extension                                  |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2016                                |
+ | Copyright (C) 2016-2017 JMA Consulting                             |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -134,7 +134,7 @@ SUM(credit) as civicrm_financial_trxn_credit
    *
    * @return string
    */
-  public static function createTrialBalanceExport($orgId) {
+  public static function exportTrialBalanceAndClosePeriod($orgId) {
     $alias = array(
       'civicrm_financial_trxn' => 'financial_trxn_civireport',
       'civicrm_financial_account' => 'financial_account_civireport',
@@ -201,7 +201,7 @@ SUM(credit) as civicrm_financial_trxn_credit
    *
    * @return string
    */
-  public static function createClosingPeriodActivity($params) {
+  public static function createClosePeriodActivity($params) {
     // Set closing date
     $priorFinPeriod = self::buildClosingDate($params['closing_date']);
     Civi::settings()->set('closing_date', $params['closing_date']);
@@ -225,7 +225,7 @@ SUM(credit) as civicrm_financial_trxn_credit
       'activity_date_time' => date('YmdHis'),
       'details' => ts('Trial Balance Report ' . (empty($previousPriorFinPeriod) ? 'for All Time Prior' : "From " . date('m/d/Y', strtotime($previousPriorFinPeriod . '+1 Day'))) . " To {$priorFinPeriod}."),
     );
-    $fileName = self::createTrialBalanceExport($params['contact_id']);
+    $fileName = self::exportTrialBalanceAndClosePeriod($params['contact_id']);
     if ($fileName) {
       $activityParams['attachFile_1'] = array(
         'uri' => $fileName,

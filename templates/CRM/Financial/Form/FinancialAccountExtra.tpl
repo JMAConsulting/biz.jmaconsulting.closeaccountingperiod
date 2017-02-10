@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.7                                                |
+ | Close Accounting Period Extension                                  |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2016                                |
+ | Copyright (C) 2016-2017 JMA Consulting                             |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -45,7 +45,7 @@
       showHideElement();
       function showHideElement() {
         var financialAccountType = $('#financial_account_type_id').val();
-        var financialAccountTypes = '{/literal}{$limitedAccount}{literal}';
+        var financialAccountTypes = '{/literal}{$filterAccounts}{literal}';
 	if ($.inArray(financialAccountType, financialAccountTypes) > -1) {
 	  $('tr.crm-contribution-form-block-current_period_opening_balance').show();
 	  $('tr.crm-contribution-form-block-opening_balance').show();

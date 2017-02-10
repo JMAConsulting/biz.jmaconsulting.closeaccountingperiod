@@ -3,8 +3,8 @@
   <item>
     <path>civicrm/admin/contribute/closeaccperiod</path>
     <title>Close Accounting Period</title>
-    <page_callback>CRM_CloseAccountingPeriod_Form_CloseAccPeriod</page_callback>
-    <access_arguments>access CiviContribute,administer CiviCRM,administer Accounting</access_arguments>
+    <page_callback>CRM_CloseAccountingPeriod_Form_CloseAccountingPeriod</page_callback>
+    <access_arguments>access CiviContribute,administer Accounting</access_arguments>
     <page_type>1</page_type>
     <weight>640</weight>
     <component>CiviContribute</component>
