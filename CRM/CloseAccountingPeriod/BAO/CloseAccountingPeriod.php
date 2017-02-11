@@ -57,7 +57,7 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
       $date->modify("last day of previous month");
       $closingDate = $date->format("Y-m-d");
     }
-    $priorDate = CRM_Contribute_BAO_Contribution::checkContributeSettings('prior_financial_period');
+    $priorDate = Civi::settings()->get('prior_financial_period');
     if (empty($priorDate)) {
       $where = " <= DATE('$closingDate') ";
       $financialBalanceField = 'opening_balance';
@@ -211,7 +211,7 @@ SUM(credit) as civicrm_financial_trxn_credit
       'Close Accounting Period',
       'name'
     );
-    $previousPriorFinPeriod = CRM_Contribute_BAO_Contribution::checkContributeSettings('prior_financial_period');
+    $previousPriorFinPeriod = Civi::settings()->get('prior_financial_period');
     $closingDate =  date('Y-m-d', strtotime($priorFinPeriod));
     $activityParams = array(
       'source_contact_id' => CRM_Core_Session::singleton()->get('userID'),
@@ -237,8 +237,7 @@ SUM(credit) as civicrm_financial_trxn_credit
     }
     $activity = CRM_Activity_BAO_Activity::create($activityParams);
     // Set Prior Financial Period
-    $updateField['prior_financial_period'] = $priorFinPeriod;
-    self::updateContributeSettings($updateField);
+    Civi::settings()->set('prior_financial_period', $priorFinPeriod);
     $redirectURL = CRM_Utils_System::url('civicrm/activity',
       "action=view&reset=1&id={$activity->id}&atype={$activityType}&cid={$activityParams['source_contact_id']}"
     );
@@ -283,18 +282,6 @@ SUM(credit) as civicrm_financial_trxn_credit
       $organizationNames[$result->id] = $result->organization_name;
     }
     return $organizationNames;
-  }
-
-  /**
-   * Update contribute settings
-   *
-   * @param array $updateField
-   *
-   */
-  public static function updateContributeSettings($updateField) {
-    $contributeSettings = Civi::settings()->get('contribution_invoice_settings');
-    $contributeSettings = array_replace($contributeSettings, $updateField);
-    Civi::settings()->set('contribution_invoice_settings', $contributeSettings);
   }
 
   /**

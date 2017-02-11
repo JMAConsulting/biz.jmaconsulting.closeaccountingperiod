@@ -43,7 +43,7 @@ class CRM_CloseAccountingPeriod_Form_CloseAccountingPeriod extends CRM_Core_Form
    */
   public function setDefaultValues() {
     $defaults = array();
-    $date = CRM_Contribute_BAO_Contribution::checkContributeSettings('prior_financial_period');
+    $date = Civi::settings()->get('prior_financial_period');
     if (!empty($date)) {
       $date = strtotime('+1 month', strtotime(date('01-m-Y', strtotime($date))));
     }
@@ -99,7 +99,7 @@ class CRM_CloseAccountingPeriod_Form_CloseAccountingPeriod extends CRM_Core_Form
    */
   public static function formRule($fields, $files, $self) {
     $error = array();
-    $previousPriorFinPeriod = CRM_Contribute_BAO_Contribution::checkContributeSettings('prior_financial_period');
+    $previousPriorFinPeriod = Civi::settings()->get('prior_financial_period');
     if (!empty($previousPriorFinPeriod)) {
       $priorFinPeriod = self::buildClosingDate($fields['closing_date']);
       if (strtotime($previousPriorFinPeriod) >= $priorFinPeriod) {

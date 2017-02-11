@@ -190,6 +190,15 @@ function closeaccountingperiod_civicrm_permission(&$permissions) {
  *
  */
 function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
+  if ($formName == 'CRM_Admin_Form_Preferences_Contribute') {
+    $defaults['fiscalYearStart'] = Civi::settings()->get('fiscalYearStart');
+    $defaults['financial_account_balance_enabled'] = Civi::settings()->get('financial_account_balance_enabled');
+    $defaults['prior_financial_period'] = Civi::settings()->get('prior_financial_period');
+    $form->setDefaults($defaults);
+    $period = Civi::settings()->get('prior_financial_period');
+    $form->assign('priorFinancialPeriod', $period);
+  }
+
   if ('CRM_Financial_Form_FinancialAccount' == $formName) {
     // foolish hack since CRM_Financial_Form_FinancialAccount is invoked twice
     static $alreadyInvoked = FALSE;
@@ -197,7 +206,7 @@ function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
       $alreadyInvoked = TRUE;
       return FALSE;
     }
-    if (CRM_Contribute_BAO_Contribution::checkContributeSettings('financial_account_bal_enable')) {
+    if (Civi::settings()->get('financial_account_balance_enabled')) {
       $attributes = array(
         'size' => 6,
         'maxlength' => 14,
@@ -236,6 +245,14 @@ function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
  *
  */
 function closeaccountingperiod_civicrm_postProcess($formName, &$form) {
+  if ($formName == 'CRM_Admin_Form_Preferences_Contribute') {
+    $params = $form->_submitValues;
+
+    Civi::settings()->set('fiscalYearStart', $params['fiscalYearStart']);
+    Civi::settings()->set('financial_account_balance_enabled', $params['financial_account_balance_enabled']);
+    Civi::settings()->set('prior_financial_period', $params['prior_financial_period']);
+  }
+
   if ('CRM_Financial_Form_FinancialAccount' == $formName) {
     $financialAccountId = $form->getVar('_id');
     if (!$financialAccountId) {
@@ -253,4 +270,65 @@ function closeaccountingperiod_civicrm_postProcess($formName, &$form) {
     );
     CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::createFinancialAccountBalance($params);
   }
+}
+
+/**
+ * Implements hook_civicrm_preProcess().
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_preProcess
+ *
+ */
+function closeaccountingperiod_civicrm_preProcess($formName, &$form) {
+  if ($formName == 'CRM_Admin_Form_Preferences_Contribute') {
+    $settings = $form->getVar('_settings');
+    $contributeSettings = array();
+    foreach ($settings as $key => $setting) {
+      $contributeSettings[$key] = $setting;
+      if ($key == 'default_invoice_page') {
+        $contributeSettings['financial_account_balance_enabled'] = CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME;
+        $contributeSettings['fiscalYearStart'] = CRM_Core_BAO_Setting::LOCALIZATION_PREFERENCES_NAME;
+        $contributeSettings['prior_financial_period'] = CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME;
+      }
+    }
+    $form->setVar('_settings', $contributeSettings);    
+  }
+}
+
+/**
+ * Implements hook_civicrm_alterSettingsMetaData().
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_alterSettingsMetaData
+ *
+ */
+function closeaccountingperiod_civicrm_alterSettingsMetaData(&$settingsMetadata, $domainID, $profile) {
+  $settingsMetadata['financial_account_balance_enabled'] = array(
+    'group_name' => 'Contribute Preferences',
+    'group' => 'contribute',
+    'name' => 'financial_account_balance_enabled',
+    'type' => 'Integer',
+    'html_type' => 'checkbox',
+    'quick_form_type' => 'Element',
+    'default' => 0,
+    'add' => '4.7',
+    'title' => 'Enable Financial Account Balances',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => '',
+    'help_text' => '',
+  );
+  $settingsMetadata['prior_financial_period'] = array(
+    'group_name' => 'Contribute Preferences',
+    'group' => 'contribute',
+    'name' => 'prior_financial_period',
+    'type' => 'activityDate',
+    'quick_form_type' => 'Date',
+    'html_type' => 'Date',
+    'default' => '',
+    'add' => '4.7',
+    'title' => 'Prior Financial Period',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => '',
+    'help_text' => '',
+  );
 }
