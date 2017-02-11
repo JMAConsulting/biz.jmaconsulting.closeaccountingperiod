@@ -197,6 +197,7 @@ function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
     $form->setDefaults($defaults);
     $period = Civi::settings()->get('prior_financial_period');
     $form->assign('priorFinancialPeriod', $period);
+    $form->assign('dateFields', array('prior_financial_period'));
   }
 
   if ('CRM_Financial_Form_FinancialAccount' == $formName) {
