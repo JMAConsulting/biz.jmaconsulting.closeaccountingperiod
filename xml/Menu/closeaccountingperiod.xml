@@ -9,4 +9,12 @@
     <weight>640</weight>
     <component>CiviContribute</component>
   </item>
+  <item>
+    <path>civicrm/contact/priorfinancialperiod</path>
+    <title>Set Prior Financial Period</title>
+    <page_callback>CRM_CloseAccountingPeriod_Form_PriorFinancialPeriod</page_callback>
+    <access_arguments>access CiviContribute</access_arguments>
+    <weight>641</weight>
+    <component>CiviContribute</component>
+  </item>
 </menu>
