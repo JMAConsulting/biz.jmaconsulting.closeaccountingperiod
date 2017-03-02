@@ -215,6 +215,7 @@ function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
 
     $period = array();
     $orgs = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getOrganizationNames();
+    $dateFormat = Civi::settings()->get('dateformatFinancialBatch');
     if (!empty($orgs)) {
       foreach ($orgs as $cid => $name) {
         $periods = civicrm_api3('Setting', 'get', array(
@@ -222,7 +223,7 @@ function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
           'contact_id' => $cid,
         ));
         if (!empty($periods['values'][$periods['id']]['prior_financial_period'])) {
-          $period[$cid] = array($name => $periods['values'][$periods['id']]['prior_financial_period']);
+          $period[$cid] = array($name => CRM_Utils_Date::customFormat($periods['values'][$periods['id']]['prior_financial_period'], $dateFormat));
         }
       }
     }

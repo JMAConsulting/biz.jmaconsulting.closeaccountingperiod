@@ -41,7 +41,7 @@ class CRM_CloseAccountingPeriod_Form_PriorFinancialPeriod extends CRM_Core_Form 
       'contact_id' => $contactId,
       'name' => 'prior_financial_period',
     ));
-    if ($period['count'] == 1) {
+    if (CRM_Utils_Array::value('prior_financial_period', $period['values'][$period['id']])) {
       $defaults['prior_financial_period'] = $period['values'][$period['id']]['prior_financial_period'];
     }
     return $defaults;
@@ -51,6 +51,14 @@ class CRM_CloseAccountingPeriod_Form_PriorFinancialPeriod extends CRM_Core_Form 
    * Build the form object.
    */
   public function buildQuickForm() {
+    $contactId = CRM_Core_Session::singleton()->get('view.id');
+    $period = civicrm_api3('Setting', 'get', array(
+      'contact_id' => $contactId,
+      'name' => 'prior_financial_period',
+    ));
+    if (CRM_Utils_Array::value('prior_financial_period', $period['values'][$period['id']])) {
+      $this->assign('priorFinancialPeriod', $period['values'][$period['id']]['prior_financial_period']);
+    }
     $this->addDate('prior_financial_period', ts('Prior Financial Period'), TRUE);
     $this->addButtons(array(
         array(
