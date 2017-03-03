@@ -167,7 +167,7 @@ function closeaccountingperiod_civicrm_navigationMenu(&$menu) {
     'separator' => 0,
   ));
   _closeaccountingperiod_civix_navigationMenu($menu);
-} 
+}
 
 /**
  * Implements hook_civicrm_permission().
@@ -184,6 +184,24 @@ function closeaccountingperiod_civicrm_permission(&$permissions) {
 }
 
 /**
+ * Implements hook_civicrm_summaryActions().
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_summaryActions
+ *
+ */
+function closeaccountingperiod_civicrm_summaryActions(&$actions, $contactID) {
+  if (CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getOrganizationNames($contactID)) {
+    $actions['prior_financial_period'] = array(
+      'title' => 'Set prior financial period',
+      'weight' => 999,
+      'ref' => 'priorfinancialperiod',
+      'key' => 'priorfinancialperiod',
+      'href' => "priorfinancialperiod?cid={$contactID}",
+    );
+  }
+}
+
+/**
  * Implements hook_civicrm_buildForm().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_buildForm
@@ -193,11 +211,23 @@ function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
   if ($formName == 'CRM_Admin_Form_Preferences_Contribute') {
     $defaults['fiscalYearStart'] = Civi::settings()->get('fiscalYearStart');
     $defaults['financial_account_balance_enabled'] = Civi::settings()->get('financial_account_balance_enabled');
-    $defaults['prior_financial_period'] = Civi::settings()->get('prior_financial_period');
     $form->setDefaults($defaults);
-    $period = Civi::settings()->get('prior_financial_period');
-    $form->assign('priorFinancialPeriod', $period);
-    $form->assign('dateFields', array('prior_financial_period'));
+
+    $period = array();
+    $orgs = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getOrganizationNames();
+    $dateFormat = Civi::settings()->get('dateformatFinancialBatch');
+    if (!empty($orgs)) {
+      foreach ($orgs as $cid => $name) {
+        $periods = civicrm_api3('Setting', 'get', array(
+          'name' => 'prior_financial_period',
+          'contact_id' => $cid,
+        ));
+        if (!empty($periods['values'][$periods['id']]['prior_financial_period'])) {
+          $period[$cid] = array($name => CRM_Utils_Date::customFormat($periods['values'][$periods['id']]['prior_financial_period'], $dateFormat));
+        }
+      }
+    }
+    $form->assign('period', $period);
   }
 
   if ('CRM_Financial_Form_FinancialAccount' == $formName) {
@@ -251,7 +281,6 @@ function closeaccountingperiod_civicrm_postProcess($formName, &$form) {
 
     Civi::settings()->set('fiscalYearStart', $params['fiscalYearStart']);
     Civi::settings()->set('financial_account_balance_enabled', $params['financial_account_balance_enabled']);
-    Civi::settings()->set('prior_financial_period', $params['prior_financial_period']);
   }
 
   if ('CRM_Financial_Form_FinancialAccount' == $formName) {

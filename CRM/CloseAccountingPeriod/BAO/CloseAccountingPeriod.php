@@ -169,7 +169,7 @@ SUM(credit) as civicrm_financial_trxn_credit
       else {
         $financialAccountParams['current_period_opening_balance'] = $result->civicrm_financial_trxn_credit - $result->civicrm_financial_trxn_debit;
       }
-      self::createFinancialAccountBalance($financialAccountParams)
+      self::createFinancialAccountBalance($financialAccountParams);
     }
     if (empty($rows)) {
       return NULL;
@@ -269,13 +269,20 @@ SUM(credit) as civicrm_financial_trxn_credit
   /**
    * Get Organization Name associated with Financial Account.
    *
+   * @param int|string $cid
+   *
    * @return array
    *
    */
-  public static function getOrganizationNames() {
-    $sql = 'SELECT cc.id, cc.organization_name FROM civicrm_contact cc 
+  public static function getOrganizationNames($cid = NULL) {
+    $where = " WHERE (1)";
+    if ($cid) {
+      $where = " AND cc.id IN ({$cid}) ";
+    }
+    $sql = "SELECT cc.id, cc.organization_name FROM civicrm_contact cc 
       INNER JOIN civicrm_financial_account cfa ON cfa.contact_id = cc.id AND cc.is_deleted = 0
-      GROUP BY cc.id';
+      {$where}
+      GROUP BY cc.id";
     $result = CRM_Core_DAO::executeQuery($sql);
     $organizationNames = array();
     while ($result->fetch()) {
