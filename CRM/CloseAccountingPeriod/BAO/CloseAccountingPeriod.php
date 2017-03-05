@@ -336,4 +336,35 @@ SUM(credit) as civicrm_financial_trxn_credit
     $financialAccountBalance->save();
   }
 
+  /**
+   * Get Prior Financial Period for Organization
+   *
+   * @param int $contactID
+   *
+   */
+  public static function getPriorFinancialPeriod($contactID) {
+    $period = civicrm_api3('Setting', 'get', array(
+      'contact_id' => $contactID,
+      'name' => 'prior_financial_period',
+    ));
+    $priorFinancialPeriod = CRM_Utils_Array::value('prior_financial_period', $period['values'][$period['id']]);
+    return $priorFinancialPeriod;
+  }
+
+  /**
+   * Set Prior Financial Period for Organization
+   *
+   * @param int $contactID
+   *
+   */
+  public static function setPriorFinancialPeriod($priorFinancialPeriod, $contactID) {
+    CRM_Core_BAO_Setting::setItem(
+      $priorFinancialPeriod,
+      CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME,
+      'prior_financial_period',
+      CRM_Core_Component::getComponentID('CiviContribute'),
+      $contactID
+    );
+  }
+
 }

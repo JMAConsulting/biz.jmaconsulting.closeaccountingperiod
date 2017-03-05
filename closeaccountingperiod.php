@@ -196,7 +196,7 @@ function closeaccountingperiod_civicrm_summaryActions(&$actions, $contactID) {
       'weight' => 999,
       'ref' => 'priorfinancialperiod',
       'key' => 'priorfinancialperiod',
-      'href' => "priorfinancialperiod?cid={$contactID}",
+      'href' => "priorfinancialperiod?reset=1",
     );
   }
 }
@@ -218,12 +218,10 @@ function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
     $dateFormat = Civi::settings()->get('dateformatFinancialBatch');
     if (!empty($orgs)) {
       foreach ($orgs as $cid => $name) {
-        $periods = civicrm_api3('Setting', 'get', array(
-          'name' => 'prior_financial_period',
-          'contact_id' => $cid,
-        ));
-        if (!empty($periods['values'][$periods['id']]['prior_financial_period'])) {
-          $period[$cid] = array($name => CRM_Utils_Date::customFormat($periods['values'][$periods['id']]['prior_financial_period'], $dateFormat));
+        $priorFinancialPeriod = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($cid);
+        $priorFinancialPeriod = date('Ymd', strtotime($priorFinancialPeriod));
+        if ($priorFinancialPeriod) {
+          $period[$cid] = array($name => CRM_Utils_Date::customFormat($priorFinancialPeriod, $dateFormat));
         }
       }
     }
@@ -278,9 +276,12 @@ function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
 function closeaccountingperiod_civicrm_postProcess($formName, &$form) {
   if ($formName == 'CRM_Admin_Form_Preferences_Contribute') {
     $params = $form->_submitValues;
-
-    Civi::settings()->set('fiscalYearStart', $params['fiscalYearStart']);
-    Civi::settings()->set('financial_account_balance_enabled', $params['financial_account_balance_enabled']);
+    if (!empty($params['fiscalYearStart'])) {
+      Civi::settings()->set('fiscalYearStart', $params['fiscalYearStart']);
+    }
+    if (!empty($params['financial_account_balance_enabled'])) {
+      Civi::settings()->set('financial_account_balance_enabled', $params['financial_account_balance_enabled']);
+    }
   }
 
   if ('CRM_Financial_Form_FinancialAccount' == $formName) {

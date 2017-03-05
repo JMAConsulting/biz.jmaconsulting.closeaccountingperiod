@@ -30,20 +30,28 @@
 class CRM_CloseAccountingPeriod_Form_PriorFinancialPeriod extends CRM_Core_Form {
 
   /**
+   * The id of the contact.
+   *
+   * @var int
+   */
+  public $_contactID;
+
+  /**
+   * Set variables up before form is built.
+   */
+  public function preProcess() {
+    parent::preProcess();
+    $this->_contactID = CRM_Utils_Request::retrieve('cid', 'Positive', $this);
+  }
+
+  /**
    * Set default values.
    *
    * @return array
    */
   public function setDefaultValues() {
     $defaults = array();
-    $contactId = CRM_Core_Session::singleton()->get('view.id');
-    $period = civicrm_api3('Setting', 'get', array(
-      'contact_id' => $contactId,
-      'name' => 'prior_financial_period',
-    ));
-    if (CRM_Utils_Array::value('prior_financial_period', $period['values'][$period['id']])) {
-      $defaults['prior_financial_period'] = $period['values'][$period['id']]['prior_financial_period'];
-    }
+    $defaults['prior_financial_period'] = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($this->_contactID);
     return $defaults;
   }
 
@@ -51,13 +59,9 @@ class CRM_CloseAccountingPeriod_Form_PriorFinancialPeriod extends CRM_Core_Form 
    * Build the form object.
    */
   public function buildQuickForm() {
-    $contactId = CRM_Core_Session::singleton()->get('view.id');
-    $period = civicrm_api3('Setting', 'get', array(
-      'contact_id' => $contactId,
-      'name' => 'prior_financial_period',
-    ));
-    if (CRM_Utils_Array::value('prior_financial_period', $period['values'][$period['id']])) {
-      $this->assign('priorFinancialPeriod', $period['values'][$period['id']]['prior_financial_period']);
+    $priorFinancialPeriod = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($this->_contactID);
+    if ($priorFinancialPeriod) {
+      $this->assign('priorFinancialPeriod', $priorFinancialPeriod);
     }
     $this->addDate('prior_financial_period', ts('Prior Financial Period'), TRUE);
     $this->addButtons(array(
@@ -79,12 +83,9 @@ class CRM_CloseAccountingPeriod_Form_PriorFinancialPeriod extends CRM_Core_Form 
   public function postProcess() {
     // store the submitted values in an array
     $params = $this->controller->exportValues($this->_name);
-    CRM_Core_BAO_Setting::setItem(
+    CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::setPriorFinancialPeriod(
       $params['prior_financial_period'],
-      CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME,
-      'prior_financial_period',
-      CRM_Core_Component::getComponentID('CiviContribute'),
-      CRM_Core_Session::singleton()->get('view.id')
+      $this->_contactID
     );
     CRM_Core_Session::setStatus(ts("Prior Financial Period has been set successfully!"), ts('Success'), 'success');
   }
