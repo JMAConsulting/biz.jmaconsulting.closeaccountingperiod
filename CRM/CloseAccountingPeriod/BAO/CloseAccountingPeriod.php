@@ -46,7 +46,7 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
    *
    * @return string
    */
-  public static function getTrialBalanceQuery($alias, $onlyFromClause = FALSE) {
+  public static function getTrialBalanceQuery($alias, $onlyFromClause = FALSE, $contactId = NULL) {
     $closingDate = NULL;
     if (!$onlyFromClause && Civi::settings()->get('closing_date')) {
       $closingDate = Civi::settings()->get('closing_date');
@@ -57,7 +57,10 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
       $date->modify("last day of previous month");
       $closingDate = $date->format("Y-m-d");
     }
-    $priorDate = Civi::settings()->get('prior_financial_period');
+    $priorDate = NULL;
+    if ($contactId) {
+      $priorDate = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($contactId);
+    }
     if (empty($priorDate)) {
       $where = " <= DATE('$closingDate') ";
       $financialBalanceField = 'opening_balance';
@@ -228,7 +231,7 @@ SUM(credit) as civicrm_financial_trxn_credit
       'Close Accounting Period',
       'name'
     );
-    $previousPriorFinPeriod = Civi::settings()->get('prior_financial_period');
+    $previousPriorFinPeriod = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($params['contact_id']);
     $closingDate =  date('Y-m-d', strtotime($priorFinPeriod));
     $activityParams = array(
       'source_contact_id' => CRM_Core_Session::singleton()->get('userID'),
@@ -254,7 +257,10 @@ SUM(credit) as civicrm_financial_trxn_credit
     }
     $activity = CRM_Activity_BAO_Activity::create($activityParams);
     // Set Prior Financial Period
-    Civi::settings()->set('prior_financial_period', $priorFinPeriod);
+    CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::setPriorFinancialPeriod(
+      $priorFinPeriod,
+      $params['contact_id']
+    );
     $redirectURL = CRM_Utils_System::url('civicrm/activity',
       "action=view&reset=1&id={$activity->id}&atype={$activityType}&cid={$activityParams['source_contact_id']}"
     );
