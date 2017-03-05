@@ -202,6 +202,11 @@ SUM(credit) as civicrm_financial_trxn_credit
    * @return string
    */
   public static function createClosePeriodActivity($params) {
+
+    // invoke hook to alter Close accounting period params
+    // or to perform any action before close accounting period is processed
+    CRM_CloseAccountingPeriod_Hook::preCloseAccountingPeriod($params);
+
     // Set closing date
     $priorFinPeriod = self::buildClosingDate($params['closing_date']);
     Civi::settings()->set('closing_date', $params['closing_date']);
