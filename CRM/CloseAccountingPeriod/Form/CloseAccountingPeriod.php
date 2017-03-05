@@ -101,24 +101,12 @@ class CRM_CloseAccountingPeriod_Form_CloseAccountingPeriod extends CRM_Core_Form
     $error = array();
     $previousPriorFinPeriod = Civi::settings()->get('prior_financial_period');
     if (!empty($previousPriorFinPeriod)) {
-      $priorFinPeriod = self::buildClosingDate($fields['closing_date']);
+      $priorFinPeriod = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::buildClosingDate($fields['closing_date']);
       if (strtotime($previousPriorFinPeriod) >= $priorFinPeriod) {
         $error['closing_date'] = ts('Closing Accounting Period Date cannot be less than prior Closing Accounting Period Date.');
       }
     }
     return $error;
-  }
-
-  /**
-   * Function to create Closing date based on Month and Year.
-   *
-   * @param array $closingDate
-   *
-   */
-  public static function buildClosingDate(&$closingDate) {
-    $priorFinPeriod = date('Ymt', mktime(0, 0, 0, $closingDate['M'], 1, $closingDate['Y']));
-    $priorFinPeriod = strtotime($priorFinPeriod);
-    return $priorFinPeriod;
   }
 
   /**

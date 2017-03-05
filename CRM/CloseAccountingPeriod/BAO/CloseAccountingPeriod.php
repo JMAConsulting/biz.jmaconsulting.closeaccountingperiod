@@ -194,6 +194,18 @@ SUM(credit) as civicrm_financial_trxn_credit
   }
 
   /**
+   * Function to create Closing date based on Month and Year.
+   *
+   * @param array $closingDate
+   *
+   */
+  public static function buildClosingDate(&$closingDate) {
+    $priorFinPeriod = date('Ymt', mktime(0, 0, 0, $closingDate['M'], 1, $closingDate['Y']));
+    $priorFinPeriod = strtotime($priorFinPeriod);
+    return $priorFinPeriod;
+  }
+
+  /**
    * Create trial balance export file
    * and update civicrm_financial_account.current_period_opening_balance field 
    *
