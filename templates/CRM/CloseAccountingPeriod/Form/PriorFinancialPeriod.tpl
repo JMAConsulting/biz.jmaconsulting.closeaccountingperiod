@@ -27,7 +27,7 @@
 <table class="form-layout-compressed">
   <tr>
     <td class="label">{$form.prior_financial_period.label}</td>
-    <td class="content">{include file="CRM/common/jcalendar.tpl" elementName=prior_financial_period}</td>
+    <td class="content">{$form.prior_financial_period.html}</td>
   </tr>
 </table>
 
@@ -38,7 +38,9 @@
 CRM.$(function($) {
 
   function checkPeriod() {
-    var speriod = $('#prior_financial_period').val();
+    var m = $('#prior_financial_period_M').val();
+    var y = $('#prior_financial_period_Y').val();
+    var speriod = m + '-' + y;
     var hperiod = '{/literal}{$priorFinancialPeriod}{literal}';
     if (((hperiod && speriod == '') || (hperiod && speriod != '')) && (speriod != hperiod)) {
       var msg = '{/literal}{ts}Changing the Prior Financial Period may result in problems calculating closing account balances accurately and / or exporting of financial transactions. Do you want to proceed?{/ts}{literal}';

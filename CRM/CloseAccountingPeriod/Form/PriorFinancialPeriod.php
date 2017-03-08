@@ -51,7 +51,14 @@ class CRM_CloseAccountingPeriod_Form_PriorFinancialPeriod extends CRM_Core_Form 
    */
   public function setDefaultValues() {
     $defaults = array();
-    $defaults['prior_financial_period'] = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($this->_contactID);
+    $date = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($this->_contactID);
+    if (!empty($date)) {
+      $date = strtotime(date('01-m-Y', strtotime('01-' . $date['M'] . '-' . $date['Y'])));
+      $defaults['prior_financial_period'] = array(
+        'M' => date('n', $date),
+        'Y' => date('Y', $date),
+      );
+    }
     return $defaults;
   }
 
@@ -61,9 +68,9 @@ class CRM_CloseAccountingPeriod_Form_PriorFinancialPeriod extends CRM_Core_Form 
   public function buildQuickForm() {
     $priorFinancialPeriod = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($this->_contactID);
     if ($priorFinancialPeriod) {
-      $this->assign('priorFinancialPeriod', $priorFinancialPeriod);
+      $this->assign('priorFinancialPeriod', $priorFinancialPeriod['M'] . '-' . $priorFinancialPeriod['Y']);
     }
-    $this->addDate('prior_financial_period', ts('Prior Financial Period'), TRUE);
+    $this->add('date', 'prior_financial_period', ts('Prior Financial Period'), CRM_Core_SelectValues::date(NULL, 'M Y', 2, 5), TRUE);
     $this->addButtons(array(
         array(
           'type' => 'cancel',
