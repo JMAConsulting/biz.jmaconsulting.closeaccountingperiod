@@ -57,6 +57,9 @@ class CRM_CloseAccountingPeriod_Form_CloseAccountingPeriod extends CRM_Core_Form
     if (count($this->_financialAccountOrg) == 1) {
       $defaults['contact_id'] = key($this->_financialAccountOrg);
     }
+    if (CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::checkIfExported($date, $defaults['contact_id'])) {
+      CRM_Core_Session::setStatus(ts('Some transactions in the reporting period have not yet been exported. Please ensure they are exported.'), ts('Warning'), 'warning');
+    }
     return $defaults;
   }
 
