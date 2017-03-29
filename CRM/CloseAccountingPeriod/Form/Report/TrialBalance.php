@@ -75,7 +75,6 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
         ),
       ),
     );
-
     parent::__construct();
   }
 
@@ -85,7 +84,8 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
 
 
   public function from() {
-    $this->_from = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getTrialBalanceQuery($this->_aliases, TRUE);
+    $contactID = $this->_params['contact_id_value'];
+    $this->_from = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getTrialBalanceQuery($this->_aliases, TRUE, $contactID);
   }
 
   public function orderBy() {

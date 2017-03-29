@@ -394,3 +394,60 @@ function closeaccountingperiod_civicrm_alterSettingsMetaData(&$settingsMetadata,
     'help_text' => '',
   );
 }
+
+/**
+ * Implementation of hook_civicrm_alterReportVar
+ */
+function closeaccountingperiod_civicrm_alterReportVar($varType, &$var, &$object) {
+  $instanceID = CRM_Report_Utils_Report::getInstanceID();
+  if ($instanceID) {
+    $params = array('id' => $instanceID);
+    $instanceValues = array();
+    CRM_Core_DAO::commonRetrieve('CRM_Report_DAO_ReportInstance',
+      $params,
+      $instanceValues
+    );
+    $formValues = CRM_Utils_Array::value('form_values', $instanceValues);
+    if ($formValues) {
+      $formValues = unserialize($formValues);
+      if ($contactId = CRM_Utils_Array::value('contact_id_value', $formValues)) {
+        $priorDate = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($contactId);
+        if (!$priorDate) {
+          $startDate = CRM_Core_DAO::singleValueQuery("SELECT MIN(trxn_date) FROM (SELECT trxn_date FROM civicrm_financial_trxn UNION SELECT transaction_date FROM civicrm_financial_item) AS S1");
+          $startYear = date('Y', strtotime($startDate));
+          $years = range($startYear, date('Y'));
+          $years = array_combine($years, $years);
+          for ($i=1; $i<=12; $i++) {
+            $months[$i] = date("M", mktime(0, 0, 0, $i, 10));
+          }
+        }
+        if ($varType == 'columns') {
+          $var['civicrm_financial_trxn']['filters'] = array(
+            'trxn_date_month' => array(
+              'title' => ts('Financial Period End Month'),
+              'operatorType' => CRM_Report_Form::OP_SELECT,
+              'options' => $months,
+              'type' => CRM_Utils_Type::T_INT,
+              'pseudofield' => TRUE,
+            ),
+          );
+          $var['civicrm_financial_trxn']['filters'] += array(
+            'trxn_date_year' => array(
+              'title' => ts('Financial Period End Year'),
+              'operatorType' => CRM_Report_Form::OP_SELECT,
+              'options' => $years,
+              'type' => CRM_Utils_Type::T_INT,
+              'pseudofield' => TRUE,
+            ),
+          );
+        }
+        if ($varType == 'sql') {
+          $params = $var->getVar('_params');
+          $endDate = date('Y-m-t', mktime(0, 0, 0, $params['trxn_date_month_value'], 1, $params['trxn_date_year_value']));
+          $from = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getTrialBalanceQuery($var->getVar('_aliases'), TRUE, $contactId, $endDate);
+          $var->setVar('_from', $from);
+        }
+      }
+    }
+  }
+}
