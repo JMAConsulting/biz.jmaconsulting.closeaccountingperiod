@@ -399,6 +399,9 @@ function closeaccountingperiod_civicrm_alterSettingsMetaData(&$settingsMetadata,
  * Implementation of hook_civicrm_alterReportVar
  */
 function closeaccountingperiod_civicrm_alterReportVar($varType, &$var, &$object) {
+  if (get_class($object) != 'CRM_CloseAccountingPeriod_Form_Report_TrialBalance') {
+    return;
+  }
   $instanceID = CRM_Report_Utils_Report::getInstanceID();
   if ($instanceID) {
     $params = array('id' => $instanceID);

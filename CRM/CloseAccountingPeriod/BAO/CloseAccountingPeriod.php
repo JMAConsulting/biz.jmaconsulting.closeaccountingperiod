@@ -351,7 +351,7 @@ SUM(credit) as civicrm_financial_trxn_credit
    * @param int $contactID
    *
    */
-  public static function getPriorFinancialPeriod($contactID = NULL) {
+  public static function getPriorFinancialPeriod($contactID) {
     $period = civicrm_api3('Setting', 'get', array(
       'contact_id' => $contactID,
       'name' => 'prior_financial_period',
