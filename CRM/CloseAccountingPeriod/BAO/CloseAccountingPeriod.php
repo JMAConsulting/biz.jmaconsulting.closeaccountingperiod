@@ -46,7 +46,7 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
    *
    * @return string
    */
-  public static function getTrialBalanceQuery($alias, $onlyFromClause = FALSE, $contactId = NULL) {
+  public static function getTrialBalanceQuery($alias, $onlyFromClause = FALSE, $contactId = NULL, $endDate = NULL) {
     $closingDate = NULL;
     if (!$onlyFromClause && Civi::settings()->get('closing_date')) {
       $closingDate = Civi::settings()->get('closing_date');
@@ -69,6 +69,9 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
       $priorDate = date('Y-m-d', strtotime($priorDate . '+1 Day'));
       $where = " BETWEEN DATE('$priorDate') AND DATE('$closingDate') ";
       $financialBalanceField = 'current_period_opening_balance';
+    }
+    if ($endDate) {
+      $where = " <= DATE('$endDate') ";
     }
     $params['labelColumn'] = 'name';
     $financialAccountType = CRM_Core_PseudoConstant::get('CRM_Financial_DAO_FinancialAccount', 'financial_account_type_id', $params);
