@@ -219,8 +219,9 @@ function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
     if (!empty($orgs)) {
       foreach ($orgs as $cid => $name) {
         $priorFinancialPeriod = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($cid);
-        $priorFinancialPeriod = date('Ymd', strtotime($priorFinancialPeriod));
         if ($priorFinancialPeriod) {
+          $priorFinancialPeriod = 1 . '/' . implode('/', $priorFinancialPeriod);
+          $priorFinancialPeriod = date('Ymd', strtotime($priorFinancialPeriod));
           $period[$cid] = array($name => CRM_Utils_Date::customFormat($priorFinancialPeriod, $dateFormat));
         }
       }
