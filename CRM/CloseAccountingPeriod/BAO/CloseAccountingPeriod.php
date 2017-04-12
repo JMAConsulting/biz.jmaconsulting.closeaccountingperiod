@@ -64,12 +64,15 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
     if (empty($priorDate)) {
       $where = " <= DATE('$closingDate') ";
       $financialBalanceField = 'opening_balance';
+      $statistics = ts('upto') . ' ' . CRM_Utils_Date::customFormat($closingDate);
     }
     else {
       $priorDate = date('Y-m-d', strtotime($priorDate . '+1 Day'));
       $where = " BETWEEN DATE('$priorDate') AND DATE('$closingDate') ";
       $financialBalanceField = 'current_period_opening_balance';
+      $statistics = CRM_Utils_Date::customFormat($priorDate) . ' - ' . CRM_Utils_Date::customFormat($closingDate);
     }
+    CRM_Core_Session::singleton()->set('statisticsPriorPeriodDate', $statistics);
     if ($endDate) {
       $where = " <= DATE('$endDate') ";
     }

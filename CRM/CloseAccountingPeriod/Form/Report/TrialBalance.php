@@ -141,4 +141,20 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
     );
   }
 
+  /**
+   * Filter statistics.
+   *
+   * @param array $statistics
+   */
+  public function filterStat(&$statistics) {
+    parent::filterStat($statistics);
+    $statisticsPriorPeriodDate = CRM_Core_Session::singleton()->get('statisticsPriorPeriodDate');
+    if ($statisticsPriorPeriodDate) {
+      $statistics['filters'][] = array(
+        'title' => ts('Trial Balance report for the period'),
+        'value' => $statisticsPriorPeriodDate,
+      );
+    }
+  }
+
 }
