@@ -357,6 +357,10 @@ SUM(credit) as civicrm_financial_trxn_credit
       'name' => 'prior_financial_period',
     ));
     $priorFinancialPeriod = CRM_Utils_Array::value('prior_financial_period', $period['values'][$period['id']]);
+    if ($priorFinancialPeriod) {
+      $priorFinancialPeriod = self::buildClosingDate($priorFinancialPeriod);
+      $priorFinancialPeriod = date('Y-m-t', $priorFinancialPeriod);
+    }
     return $priorFinancialPeriod;
   }
 
@@ -367,6 +371,10 @@ SUM(credit) as civicrm_financial_trxn_credit
    *
    */
   public static function setPriorFinancialPeriod($priorFinancialPeriod, $contactID) {
+    $priorFinancialPeriod = array(
+      'M' => date('m', strtotime($priorFinancialPeriod)),
+      'Y' => date('Y', strtotime($priorFinancialPeriod)),
+    );
     CRM_Core_BAO_Setting::setItem(
       $priorFinancialPeriod,
       CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME,
