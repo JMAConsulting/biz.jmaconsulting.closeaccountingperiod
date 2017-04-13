@@ -37,6 +37,7 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
   /**
    */
   public function __construct() {
+    list($months, $years) = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getDates();
     $this->_columns = array(
       'civicrm_financial_account' => array(
         'dao' => 'CRM_Financial_DAO_FinancialAccount',
@@ -73,6 +74,24 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
             'dbAlias' => 'SUM(credit)',
           ),
         ),
+        'filters' => array(
+          'trxn_date_month' => array(
+            'title' => ts('Financial Period End Month'),
+            'operatorType' => CRM_Report_Form::OP_SELECT,
+            'options' => $months,
+            'type' => CRM_Utils_Type::T_INT,
+            'pseudofield' => TRUE,
+            'default' => 0,
+          ),
+          'trxn_date_year' => array(
+            'title' => ts('Financial Period End Year'),
+            'operatorType' => CRM_Report_Form::OP_SELECT,
+            'options' => $years,
+            'type' => CRM_Utils_Type::T_INT,
+            'pseudofield' => TRUE,
+            'default' => 0,
+          ),
+        ),
       ),
     );
     parent::__construct();
@@ -84,8 +103,12 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
 
 
   public function from() {
+    $endDate = NULL;
     $contactID = $this->_params['contact_id_value'];
-    $this->_from = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getTrialBalanceQuery($this->_aliases, TRUE, $contactID);
+    if (isset($this->_params['trxn_date_month_value']) && isset($this->_params['trxn_date_year_value'])) {
+      $endDate = date('Y-m-t', mktime(0, 0, 0, $this->_params['trxn_date_month_value'], 1, $this->_params['trxn_date_year_value']));
+    }
+    $this->_from = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getTrialBalanceQuery($this->_aliases, TRUE, $contactID, $endDate);
   }
 
   public function orderBy() {

@@ -72,10 +72,11 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
       $financialBalanceField = 'current_period_opening_balance';
       $statistics = CRM_Utils_Date::customFormat($priorDate) . ' - ' . CRM_Utils_Date::customFormat($closingDate);
     }
-    CRM_Core_Session::singleton()->set('statisticsPriorPeriodDate', $statistics);
     if ($endDate) {
       $where = " <= DATE('$endDate') ";
+      $statistics = ts('upto') . ' ' . CRM_Utils_Date::customFormat($endDate);
     }
+    CRM_Core_Session::singleton()->set('statisticsPriorPeriodDate', $statistics);
     $params['labelColumn'] = 'name';
     $financialAccountType = CRM_Core_PseudoConstant::get('CRM_Financial_DAO_FinancialAccount', 'financial_account_type_id', $params);
     $financialAccountTypes = array(
@@ -263,8 +264,11 @@ SUM(credit) as civicrm_financial_trxn_credit
     }
     $activity = CRM_Activity_BAO_Activity::create($activityParams);
     // Set Prior Financial Period
+    $priorDate = array();
+    $priorDate['M'] = date('n', strtotime($priorFinPeriod));
+    $priorDate['Y'] = date('Y', strtotime($priorFinPeriod));
     CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::setPriorFinancialPeriod(
-      $priorFinPeriod,
+      $priorDate,
       $params['contact_id']
     );
     $redirectURL = CRM_Utils_System::url('civicrm/activity',
@@ -374,10 +378,18 @@ SUM(credit) as civicrm_financial_trxn_credit
    *
    */
   public static function setPriorFinancialPeriod($priorFinancialPeriod, $contactID) {
-    $priorFinancialPeriod = array(
-      'M' => $priorFinancialPeriod['M'],
-      'Y' => $priorFinancialPeriod['Y'],
-    );
+    if (is_array($priorFinancialPeriod)) {
+      $priorFinancialPeriod = array(
+        'M' => $priorFinancialPeriod['M'],
+        'Y' => $priorFinancialPeriod['Y'],
+      );
+    }
+    else {
+      $priorFinancialPeriod = array(
+        'M' => date('m', strtotime($priorFinancialPeriod)),
+        'Y' => date('Y', strtotime($priorFinancialPeriod)),
+      );
+    }
     CRM_Core_BAO_Setting::setItem(
       $priorFinancialPeriod,
       CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME,
@@ -385,6 +397,37 @@ SUM(credit) as civicrm_financial_trxn_credit
       CRM_Core_Component::getComponentID('CiviContribute'),
       $contactID
     );
+  }
+
+
+  /**
+   * Return dates for filter
+   *
+   * @param int $contactId
+   * return array
+   */
+  public static function getDates($contactId = NULL) {
+    $months = $years = $priorDate = array();
+    if ($contactId) {
+      $priorDate = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($contactId);
+    }
+    if (!$priorDate) {
+      $startDate = CRM_Core_DAO::singleValueQuery("SELECT MIN(trxn_date) FROM (SELECT trxn_date FROM civicrm_financial_trxn UNION SELECT transaction_date FROM civicrm_financial_item) AS S1");
+      $startYear = date('Y', strtotime($startDate));
+      $years = range($startYear, date('Y'));
+      $years = array_combine($years, $years);
+      $months[0] = $years[0] = '-any-';
+      for ($i=1; $i<=12; $i++) {
+        $months[$i] = date("M", mktime(0, 0, 0, $i, 10));
+      }
+    }
+    else {
+      $month = date('n', strtotime("+1 month", strtotime($priorDate)));
+      $months[$month] = date('M', strtotime("+1 month", strtotime($priorDate)));
+      $year = date('Y', strtotime($priorDate));
+      $years[$year] = $year;
+    }
+    return array($months, $years);
   }
 
 }
