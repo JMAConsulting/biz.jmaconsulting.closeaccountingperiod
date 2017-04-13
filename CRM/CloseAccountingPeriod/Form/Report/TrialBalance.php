@@ -105,7 +105,7 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
   public function from() {
     $endDate = NULL;
     $contactID = $this->_params['contact_id_value'];
-    if (isset($this->_params['trxn_date_month_value']) && isset($this->_params['trxn_date_year_value'])) {
+    if (!empty($this->_params['trxn_date_month_value']) && !empty($this->_params['trxn_date_year_value'])) {
       $endDate = date('Y-m-t', mktime(0, 0, 0, $this->_params['trxn_date_month_value'], 1, $this->_params['trxn_date_year_value']));
     }
     $this->_from = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getTrialBalanceQuery($this->_aliases, TRUE, $contactID, $endDate);
