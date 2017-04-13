@@ -106,6 +106,10 @@ class CRM_CloseAccountingPeriod_Form_CloseAccountingPeriod extends CRM_Core_Form
         $error['closing_date'] = ts('Closing Accounting Period Date cannot be less than prior Closing Accounting Period Date.');
       }
     }
+    $closingDate = date('Ymd', mktime(0, 0, 0, $fields['closing_date']['M'], date('d'), $fields['closing_date']['Y']));
+    if (!($closingDate < date('Ymd'))) {
+      $error['closing_date'] = ts('You cannot close accounting period before the current month is over.');
+    }
     return $error;
   }
 
