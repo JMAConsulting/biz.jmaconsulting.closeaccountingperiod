@@ -414,6 +414,7 @@ function closeaccountingperiod_civicrm_alterReportVar($varType, &$var, &$object)
     if ($formValues) {
       $formValues = unserialize($formValues);
       if ($contactId = CRM_Utils_Array::value('contact_id_value', $formValues)) {
+        $months = $years = array();
         $priorDate = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($contactId);
         if (!$priorDate) {
           $startDate = CRM_Core_DAO::singleValueQuery("SELECT MIN(trxn_date) FROM (SELECT trxn_date FROM civicrm_financial_trxn UNION SELECT transaction_date FROM civicrm_financial_item) AS S1");
@@ -423,6 +424,12 @@ function closeaccountingperiod_civicrm_alterReportVar($varType, &$var, &$object)
           for ($i=1; $i<=12; $i++) {
             $months[$i] = date("M", mktime(0, 0, 0, $i, 10));
           }
+        }
+        else {
+          $month = date('n', strtotime("+1 month", strtotime($priorDate)));
+          $months[$month] = date('M', strtotime("+1 month", strtotime($priorDate)));
+          $year = date('Y', strtotime($priorDate));
+          $years[$year] = $year;
         }
         if ($varType == 'columns') {
           $var['civicrm_financial_trxn']['filters'] = array(
