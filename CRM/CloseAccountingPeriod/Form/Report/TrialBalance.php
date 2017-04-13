@@ -79,6 +79,9 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
   }
 
   public function preProcess() {
+    if (CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::checkIfExported($date)) {
+      CRM_Core_Session::setStatus(ts('Some transactions in the reporting period have not yet been exported. Please ensure they are exported.'), ts('Warning'), 'warning');
+    }
     parent::preProcess();
   }
 

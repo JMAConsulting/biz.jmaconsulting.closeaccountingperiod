@@ -387,4 +387,37 @@ SUM(credit) as civicrm_financial_trxn_credit
     );
   }
 
+  /**
+   * Check if transactions are exported before account period is closed.
+   *
+   * @param string $date
+   *   Closing Date.
+   * @param int $contactId
+   *   Contact ID of organization.
+   *
+   */
+  public static function checkIfExported($closingDate, $contactId = NULL) {
+    $priorDate = NULL;
+    $closingDate = date('Y-m-d', $closingDate);
+    if ($contactId) {
+      $priorDate = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($contactId);
+    }
+    if (empty($priorDate)) {
+      $where = " <= DATE('$closingDate') ";
+    }
+    else {
+      $priorDate = $priorDate['Y'] . '-' . $priorDate['M'] . '-' . $priorDate['d'];
+      $priorDate = date('Y-m-d', strtotime($priorDate . '+1 Day'));
+      $where = " BETWEEN DATE('$priorDate') AND DATE('$closingDate') ";
+    }
+    $batchStatus = CRM_Core_PseudoConstant::get('CRM_Batch_DAO_Batch', 'status_id');
+    $sql = "SELECT COUNT(ft.id) FROM civicrm_financial_trxn ft
+      LEFT JOIN civicrm_entity_batch eb ON eb.entity_id = ft.id AND eb.entity_table = 'civicrm_financial_trxn'
+      LEFT JOIN civicrm_batch b ON b.id = eb.batch_id
+      WHERE eb.entity_id IS NULL
+      AND ft.trxn_date {$where}
+      AND (b.status_id IS NULL OR b.status_id <> " . array_search('Exported', $batchStatus) . ")";
+    return $count = CRM_Core_DAO::singleValueQuery($sql);
+  }
+
 }
