@@ -315,7 +315,7 @@ function closeaccountingperiod_civicrm_postProcess($formName, &$form) {
     }
   }
 
-  if ('CRM_Financial_Form_FinancialAccount' == $formName) {
+  if ('CRM_Financial_Form_FinancialAccount' == $formName && !($form->_action & CRM_Core_Action::DELETE)) {
     $financialAccountId = $form->getVar('_id');
     if (!$financialAccountId) {
       $financialAccountId = CRM_Core_DAO::getFieldValue('CRM_Financial_DAO_FinancialAccount', $form->_submitValues['name'], 'id', 'name');
