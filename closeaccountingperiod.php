@@ -191,7 +191,7 @@ function closeaccountingperiod_civicrm_permission(&$permissions) {
  */
 function closeaccountingperiod_civicrm_summaryActions(&$actions, $contactID) {
   if (CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getOrganizationNames($contactID)) {
-    $actions['prior_financial_period'] = array(
+    $actions['otherActions']['prior_financial_period'] = array(
       'title' => 'Set prior financial period',
       'weight' => 999,
       'ref' => 'priorfinancialperiod',
