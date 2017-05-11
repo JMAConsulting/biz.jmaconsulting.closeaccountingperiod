@@ -81,7 +81,7 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
             'options' => $months,
             'type' => CRM_Utils_Type::T_INT,
             'pseudofield' => TRUE,
-            'default' => 0,
+            'default' => '',
           ),
           'trxn_date_year' => array(
             'title' => ts('Financial Period End Year'),
@@ -89,7 +89,7 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
             'options' => $years,
             'type' => CRM_Utils_Type::T_INT,
             'pseudofield' => TRUE,
-            'default' => 0,
+            'default' => '',
           ),
         ),
       ),
