@@ -416,7 +416,7 @@ SUM(credit) as civicrm_financial_trxn_credit
       $startYear = date('Y', strtotime($startDate));
       $years = range($startYear, date('Y'));
       $years = array_combine($years, $years);
-      $months[0] = $years[0] = '-any-';
+      $months[''] = $years[''] = '-any-';
       for ($i=1; $i<=12; $i++) {
         $months[$i] = date("M", mktime(0, 0, 0, $i, 10));
       }
