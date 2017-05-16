@@ -307,11 +307,13 @@ function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
 function closeaccountingperiod_civicrm_postProcess($formName, &$form) {
   if ($formName == 'CRM_Admin_Form_Preferences_Contribute') {
     $params = $form->_submitValues;
-    if (!empty($params['fiscalYearStart'])) {
-      Civi::settings()->set('fiscalYearStart', $params['fiscalYearStart']);
-    }
-    if (!empty($params['financial_account_balance_enabled'])) {
-      Civi::settings()->set('financial_account_balance_enabled', $params['financial_account_balance_enabled']);
+    foreach (array(
+        'fiscalYearStart',
+        'financial_account_balance_enabled',
+        'prevent_recording_trxn_closed_month',
+      ) as $settingName
+    ) {
+      Civi::settings()->set($settingName, CRM_Utils_Array::value($settingName, $params));
     }
   }
 
@@ -350,6 +352,7 @@ function closeaccountingperiod_civicrm_preProcess($formName, &$form) {
         $contributeSettings['financial_account_balance_enabled'] = CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME;
         $contributeSettings['fiscalYearStart'] = CRM_Core_BAO_Setting::LOCALIZATION_PREFERENCES_NAME;
         $contributeSettings['prior_financial_period'] = CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME;
+        $contributeSettings['prevent_recording_trxn_closed_month'] = CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME;
       }
     }
     $form->setVar('_settings', $contributeSettings);    
@@ -391,6 +394,20 @@ function closeaccountingperiod_civicrm_alterSettingsMetaData(&$settingsMetadata,
     'is_domain' => 1,
     'is_contact' => 0,
     'description' => '',
+    'help_text' => '',
+  );
+  $settingsMetadata['prevent_recording_trxn_closed_month'] = array(
+    'group_name' => 'Contribute Preferences',
+    'group' => 'contribute',
+    'name' => 'prevent_recording_trxn_closed_month',
+    'type' => 'Boolean',
+    'quick_form_type' => 'YesNo',
+    'default' => '',
+    'add' => '4.7',
+    'title' => 'Prevent Recording Payments for closed month',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => "If set to true, Recording of payment for closed month won't be allowed.",
     'help_text' => '',
   );
 }
@@ -448,6 +465,40 @@ function closeaccountingperiod_civicrm_alterReportVar($varType, &$var, &$object)
           );
         }
       }
+    }
+  }
+}
+
+/**
+ * Implements hook_civicrm_validateForm().
+ *
+ * @param string $formName
+ * @param array $fields
+ * @param array $files
+ * @param CRM_Core_Form $form
+ * @param array $errors
+ */
+function closeaccountingperiod_civicrm_validateForm($formName, &$fields, &$files, &$form, &$errors) {
+  if (in_array($formName, array(
+    "CRM_Contribute_Form_Contribution",
+    "CRM_Member_Form_Membership",
+    "CRM_Event_Form_Participant",
+    "CRM_Contribute_Form_AdditionalPayment"
+  ))) {
+    if (!($form->_action & CRM_Core_Action::ADD) || $form->_mode) {
+      return NULL;
+    }
+    $dateField = 'receive_date';
+    if ($formName == 'CRM_Contribute_Form_AdditionalPayment') {
+      $dateField = 'trxn_date';
+    }
+    $receiveDate = CRM_Utils_Array::value($dateField, $fields);
+    $financialTypeId = CRM_Utils_Array::value('financial_type_id', $fields);
+    try {
+      CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::checkReceiveDate($receiveDate, $financialTypeId);
+    }
+    catch (CRM_Core_Exception $e) {
+      $errors[$dateField] = $e->getMessage();
     }
   }
 }

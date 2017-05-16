@@ -399,7 +399,6 @@ SUM(credit) as civicrm_financial_trxn_credit
     );
   }
 
-
   /**
    * Return dates for filter
    *
@@ -428,6 +427,29 @@ SUM(credit) as civicrm_financial_trxn_credit
       $years[$year] = $year;
     }
     return array($months, $years);
+  }
+
+  /**
+   * Return dates for filter
+   *
+   * @param datetime $receiveDate
+   * @param int $financialTypeId
+   */
+  public static function checkReceiveDate($receiveDate, $financialTypeId) {
+    if (!Civi::settings()->get('prevent_recording_trxn_closed_month')) {
+      return NULL;
+    }
+    $result = civicrm_api3('EntityFinancialAccount', 'getsingle', array(
+      'return' => array("financial_account_id.contact_id"),
+      'entity_table' => "civicrm_financial_type",
+      'entity_id' => $financialTypeId,
+      'options' => array('limit' => 1),
+    ));
+    $contactId = $result['financial_account_id.contact_id'];
+    $priorFinancialPeriod = self::getPriorFinancialPeriod($contactId);
+    if ($priorFinancialPeriod && strtotime($receiveDate) < strtotime($priorFinancialPeriod)) {
+      throw new CRM_Core_Exception(ts("Recording of payment for closed month is not allowed."));
+    }
   }
 
 }
