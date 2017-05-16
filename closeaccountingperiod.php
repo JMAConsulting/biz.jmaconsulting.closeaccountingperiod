@@ -29,6 +29,7 @@ function closeaccountingperiod_civicrm_xmlMenu(&$files) {
  */
 function closeaccountingperiod_civicrm_install() {
   _closeaccountingperiod_civix_civicrm_install();
+  _closeaccountingperiod_move_account_balance();
 }
 
 /**
@@ -84,6 +85,13 @@ function closeaccountingperiod_civicrm_upgrade($op, CRM_Queue_Queue $queue = NUL
  */
 function closeaccountingperiod_civicrm_managed(&$entities) {
   _closeaccountingperiod_civix_civicrm_managed($entities);
+  $result = civicrm_api3('OptionValue', 'getcount', array(
+    'option_group_id' => "activity_type",
+    'name' => "Close Accounting Period",
+  ));
+  if ($result) {
+    return NULL;
+  }
   $entities[] = array(
     'module' => 'biz.jmaconsulting.closeaccountingperiod',
     'name' => 'close_accounting_period',
@@ -500,5 +508,15 @@ function closeaccountingperiod_civicrm_validateForm($formName, &$fields, &$files
     catch (CRM_Core_Exception $e) {
       $errors[$dateField] = $e->getMessage();
     }
+  }
+}
+
+function _closeaccountingperiod_move_account_balance() {
+  if (CRM_Core_DAO::checkFieldExists('civicrm_financial_account', 'opening_balance')) {
+    $sql = "
+      INSERT IGNORE INTO civicrm_financial_accounts_balance (financial_account_id, opening_balance, current_period_opening_balance)
+      SELECT id, opening_balance, current_period_opening_balance FROM civicrm_financial_account
+    ";
+    CRM_Core_DAO::executeQuery($sql);
   }
 }
