@@ -496,6 +496,11 @@ function closeaccountingperiod_civicrm_validateForm($formName, &$fields, &$files
     if (!($form->_action & CRM_Core_Action::ADD) || $form->_mode) {
       return NULL;
     }
+    if (in_array($formName, array('CRM_Member_Form_Membership', 'CRM_Event_Form_Participant'))
+      && !CRM_Utils_Array::value('record_contribution', $fields)
+    ) {
+      return NULL;
+    }
     $dateField = 'receive_date';
     if ($formName == 'CRM_Contribute_Form_AdditionalPayment') {
       $dateField = 'trxn_date';
@@ -504,6 +509,12 @@ function closeaccountingperiod_civicrm_validateForm($formName, &$fields, &$files
     $financialTypeId = CRM_Utils_Array::value('financial_type_id', $fields);
     try {
       CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::checkReceiveDate($receiveDate, $financialTypeId);
+      if (CRM_Utils_Array::value('revenue_recognition_date', $fields)) {
+        $receiveDate = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::buildClosingDate($fields['revenue_recognition_date']);
+        $receiveDate = date('Ymd', $receiveDate);
+        $dateField = 'revenue_recognition_date';
+        CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::checkReceiveDate($receiveDate, $financialTypeId);
+      }
     }
     catch (CRM_Core_Exception $e) {
       $errors[$dateField] = $e->getMessage();
