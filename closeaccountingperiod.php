@@ -509,7 +509,9 @@ function closeaccountingperiod_civicrm_validateForm($formName, &$fields, &$files
     $financialTypeId = CRM_Utils_Array::value('financial_type_id', $fields);
     try {
       CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::checkReceiveDate($receiveDate, $financialTypeId);
-      if (CRM_Utils_Array::value('revenue_recognition_date', $fields)) {
+      if (CRM_Utils_Array::value('revenue_recognition_date', $fields)
+        && $fields['revenue_recognition_date']['M'] && $fields['revenue_recognition_date']['Y']
+      ) {
         $receiveDate = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::buildClosingDate($fields['revenue_recognition_date']);
         $receiveDate = date('Ymd', $receiveDate);
         $dateField = 'revenue_recognition_date';
