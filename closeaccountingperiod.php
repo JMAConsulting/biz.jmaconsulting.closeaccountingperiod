@@ -85,12 +85,14 @@ function closeaccountingperiod_civicrm_upgrade($op, CRM_Queue_Queue $queue = NUL
  */
 function closeaccountingperiod_civicrm_managed(&$entities) {
   _closeaccountingperiod_civix_civicrm_managed($entities);
-  $result = civicrm_api3('OptionValue', 'getcount', array(
+  $result = civicrm_api3('OptionValue', 'get', array(
     'option_group_id' => "activity_type",
     'name' => "Close Accounting Period",
+    'options' => array('limit' => 1),
   ));
+  $id = NULL;
   if ($result) {
-    return NULL;
+    $id = $result['id'];
   }
   $entities[] = array(
     'module' => 'biz.jmaconsulting.closeaccountingperiod',
@@ -98,6 +100,7 @@ function closeaccountingperiod_civicrm_managed(&$entities) {
     'entity' => 'OptionValue',
     'params' => array(
       'version' => 3,
+      'id' => $id,
       'label' => 'Close Accounting Period',
       'name' => 'Close Accounting Period',
       'description' => 'Close Accounting Period',
