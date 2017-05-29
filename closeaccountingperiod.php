@@ -91,7 +91,7 @@ function closeaccountingperiod_civicrm_managed(&$entities) {
     'options' => array('limit' => 1),
   ));
   $id = NULL;
-  if ($result) {
+  if ($result['values']) {
     $id = $result['id'];
   }
   $entities[] = array(

@@ -234,9 +234,10 @@ SUM(credit) as civicrm_financial_trxn_credit
     Civi::settings()->set('closing_date', $params['closing_date']);
     $priorFinPeriod = date('m/d/Y', $priorFinPeriod);
     // Create activity
-    $activityType = CRM_Core_OptionGroup::getValue('activity_type',
-      'Close Accounting Period',
-      'name'
+    $activityType = CRM_Core_PseudoConstant::getKey(
+      'CRM_Activity_BAO_Activity',
+      'activity_type_id',
+      'Close Accounting Period'
     );
     $previousPriorFinPeriod = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($params['contact_id']);
     $closingDate =  date('Y-m-d', strtotime($priorFinPeriod));
@@ -245,9 +246,10 @@ SUM(credit) as civicrm_financial_trxn_credit
       'assignee_contact_id' => $params['contact_id'],
       'activity_type_id' => $activityType,
       'subject' => ts('Close Accounting Period : ') . $closingDate,
-      'status_id' => CRM_Core_OptionGroup::getValue('activity_status',
-        'Completed',
-        'name'
+      'status_id' => CRM_Core_PseudoConstant::getKey(
+        'CRM_Activity_BAO_Activity',
+        'status_id',
+        'Completed'
       ),
       'activity_date_time' => date('YmdHis'),
       'details' => ts('Trial Balance Report ' . (empty($previousPriorFinPeriod) ? 'for All Time Prior' : "From " . date('m/d/Y', strtotime($previousPriorFinPeriod . '+1 Day'))) . " To {$priorFinPeriod}."),

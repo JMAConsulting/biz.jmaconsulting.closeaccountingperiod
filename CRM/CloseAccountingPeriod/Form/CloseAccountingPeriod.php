@@ -99,7 +99,10 @@ class CRM_CloseAccountingPeriod_Form_CloseAccountingPeriod extends CRM_Core_Form
    */
   public static function formRule($fields, $files, $self) {
     $error = array();
-    $previousPriorFinPeriod = Civi::settings()->get('prior_financial_period');
+    if (empty($fields['contact_id'])) {
+      return $error;
+    }
+    $previousPriorFinPeriod = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($fields['contact_id']);
     if (!empty($previousPriorFinPeriod)) {
       $priorFinPeriod = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::buildClosingDate($fields['closing_date']);
       if (strtotime($previousPriorFinPeriod) >= $priorFinPeriod) {
