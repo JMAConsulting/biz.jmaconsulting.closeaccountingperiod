@@ -219,6 +219,11 @@ function closeaccountingperiod_civicrm_summaryActions(&$actions, $contactID) {
  *
  */
 function closeaccountingperiod_civicrm_buildForm($formName, &$form) {
+  if ($formName == 'CRM_Financial_Form_BatchTransaction') {
+    CRM_Core_Region::instance('page-body')->add(array(
+      'template' => 'CRM/Financial/Form/BatchTransactionExtra.tpl',
+    ));
+  }
   if ($formName == 'CRM_Admin_Form_Preferences_Contribute') {
     $defaults['fiscalYearStart'] = Civi::settings()->get('fiscalYearStart');
     $defaults['financial_account_balance_enabled'] = Civi::settings()->get('financial_account_balance_enabled');
@@ -322,6 +327,7 @@ function closeaccountingperiod_civicrm_postProcess($formName, &$form) {
         'fiscalYearStart',
         'financial_account_balance_enabled',
         'prevent_recording_trxn_closed_month',
+	'financial_batch_same_month',
       ) as $settingName
     ) {
       Civi::settings()->set($settingName, CRM_Utils_Array::value($settingName, $params));
@@ -360,6 +366,7 @@ function closeaccountingperiod_civicrm_preProcess($formName, &$form) {
     foreach ($settings as $key => $setting) {
       $contributeSettings[$key] = $setting;
       if ($key == 'default_invoice_page') {
+        $contributeSettings['financial_batch_same_month'] = CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME;
         $contributeSettings['financial_account_balance_enabled'] = CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME;
         $contributeSettings['fiscalYearStart'] = CRM_Core_BAO_Setting::LOCALIZATION_PREFERENCES_NAME;
         $contributeSettings['prior_financial_period'] = CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME;
@@ -377,6 +384,21 @@ function closeaccountingperiod_civicrm_preProcess($formName, &$form) {
  *
  */
 function closeaccountingperiod_civicrm_alterSettingsMetaData(&$settingsMetadata, $domainID, $profile) {
+  $settingsMetadata['financial_batch_same_month'] = array(
+    'group_name' => 'Contribute Preferences',
+    'group' => 'contribute',
+    'name' => 'financial_batch_same_month',
+    'type' => 'Integer',
+    'html_type' => 'checkbox',
+    'quick_form_type' => 'Element',
+    'default' => 0,
+    'add' => '4.7',
+    'title' => 'Limit Financial Batches to Same Month',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => '',
+    'help_text' => '',
+  );
   $settingsMetadata['financial_account_balance_enabled'] = array(
     'group_name' => 'Contribute Preferences',
     'group' => 'contribute',
@@ -534,5 +556,17 @@ function _closeaccountingperiod_move_account_balance() {
       SELECT id, opening_balance, current_period_opening_balance FROM civicrm_financial_account
     ";
     CRM_Core_DAO::executeQuery($sql);
+  }
+}
+
+/**
+ * Implements hook_civicrm_post().
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_post
+ *
+ */
+function closeaccountingperiod_civicrm_post($op, $objectName, $objectId, &$objectRef) {
+  if ($objectName == 'EntityBatch' && $op == 'create') {
+    CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::checkFinancialTrxnForBatch($objectRef);
   }
 }

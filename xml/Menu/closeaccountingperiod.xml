@@ -17,4 +17,11 @@
     <weight>641</weight>
     <component>CiviContribute</component>
   </item>
+  <item>
+    <path>civicrm/batch/checkFinancialTrxnForBatchStatus</path>
+    <page_callback>CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::checkFinancialTrxnForBatchStatus</page_callback>
+    <access_arguments>access CiviContribute</access_arguments>
+    <weight>642</weight>
+    <component>CiviContribute</component>
+  </item>
 </menu>

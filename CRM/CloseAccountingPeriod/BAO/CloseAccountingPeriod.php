@@ -34,6 +34,10 @@
  */
 class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
 
+  public static $_batchFinancialTrxns = NULL;
+
+  public static $_setStatus = NULL;
+
   public function __construct() {
     parent::__construct();
   }
@@ -452,6 +456,56 @@ SUM(credit) as civicrm_financial_trxn_credit
     if ($priorFinancialPeriod && strtotime($receiveDate) < strtotime($priorFinancialPeriod)) {
       throw new CRM_Core_Exception(ts("Recording of payment for closed month is not allowed."));
     }
+  }
+
+  /**
+   * Limit adding of Financial trxn to same month.
+   *
+   * @param obj $params CRM_Batch_DAO_EntityBatch
+   */
+  public static function checkFinancialTrxnForBatch($entityBatch) {
+    if (!Civi::settings()->get('financial_batch_same_month')) {
+      return NULL;
+    }
+    if ($entityBatch->entity_table != 'civicrm_financial_trxn') {
+      return NULL;
+    }
+    $batchId = $entityBatch->batch_id;
+    if (empty(self::$_batchFinancialTrxns[$batchId])) {
+      $batchTransactionMonth = CRM_Core_DAO::singleValueQuery("SELECT cft.trxn_date FROM `civicrm_entity_batch` ceb
+INNER JOIN civicrm_financial_trxn cft ON cft.id = ceb.entity_id AND ceb.batch_id = {$batchId}
+LIMIT 1");
+      self::$_batchFinancialTrxns[$batchId] = $batchTransactionMonth;
+    }
+    else {
+      $batchTransactionMonth = self::$_batchFinancialTrxns[$batchId];
+    }
+    if ($batchTransactionMonth) {
+      $financialTrxnId = $entityBatch->entity_id;
+      $trxnDate = CRM_Core_DAO::getFieldValue('CRM_Financial_DAO_FinancialTrxn', $financialTrxnId, 'trxn_date');
+      $trxnMonth = date('Ym', strtotime($trxnDate));
+      $batchTransactionMonthYear = date('Ym', strtotime($batchTransactionMonth));
+      if ($trxnMonth != $batchTransactionMonthYear) {
+        $entityBatch->delete();
+	if (!self::$_setStatus) {
+	  self::$_setStatus = TRUE;
+	  $month = date('F', strtotime($batchTransactionMonth));
+	  $year = date('Y', strtotime($batchTransactionMonth));
+	  CRM_Core_Session::singleton()->set('batchTransactionStatus', ts("CiviCRM has been configured to require all transactions added to a batch to have their Transaction Date in the same calendar month. Please do not attempt to assign transactions that are not in {$month}, {$year} to this batch"));
+        }
+      }
+    }
+  }
+
+  /**
+   * Display Status
+   */
+  public static function checkFinancialTrxnForBatchStatus() {
+   $msg = CRM_Core_Session::singleton()->get('batchTransactionStatus');
+   if ($msg) {
+     CRM_Core_Session::singleton()->set('batchTransactionStatus', '');
+   }
+   CRM_Utils_JSON::output($msg);
   }
 
 }
