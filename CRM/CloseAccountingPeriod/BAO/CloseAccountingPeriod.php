@@ -34,7 +34,7 @@
  */
 class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
 
-  public static $_batchFinancialTrxns = NULL;
+  public static $_batchFinancialTrxnDate = NULL;
 
   public static $_setStatus = NULL;
 
@@ -102,7 +102,7 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
           FROM civicrm_financial_item cfi3
             INNER JOIN civicrm_entity_financial_trxn ceft3 ON cfi3.id = ceft3.entity_id
               AND ceft3.entity_table = 'civicrm_financial_item'
-            INNER JOIN civicrm_financial_trxn cft3 ON ceft3.financial_trxn_id = cft3.id 
+            INNER JOIN civicrm_financial_trxn cft3 ON ceft3.financial_trxn_id = cft3.id
               AND cft3.to_financial_account_id IS NULL
           WHERE cfi3.transaction_date {$where}
         UNION
@@ -131,18 +131,18 @@ financial_account_civireport.name as civicrm_financial_account_name,
 financial_account_civireport.financial_account_type_id as civicrm_financial_account_financial_account_type_id,
 financial_account_civireport.accounting_code as civicrm_financial_account_accounting_code,
 SUM(debit) as civicrm_financial_trxn_debit,
-SUM(credit) as civicrm_financial_trxn_credit  
+SUM(credit) as civicrm_financial_trxn_credit
   {$from}
   WHERE {$alias['civicrm_financial_account']}.contact_id = %1
   GROUP BY financial_account_civireport.id
-  ORDER BY financial_account_civireport.name  
+  ORDER BY financial_account_civireport.name
 ";
     return $query;
   }
 
   /**
    * Create trial balance export file
-   * and update civicrm_financial_account.current_period_opening_balance field 
+   * and update civicrm_financial_account.current_period_opening_balance field
    *
    * @param int $orgId
    *
@@ -221,7 +221,7 @@ SUM(credit) as civicrm_financial_trxn_credit
 
   /**
    * Create trial balance export file
-   * and update civicrm_financial_account.current_period_opening_balance field 
+   * and update civicrm_financial_account.current_period_opening_balance field
    *
    * @param int $orgId
    *
@@ -318,7 +318,7 @@ SUM(credit) as civicrm_financial_trxn_credit
     if ($cid) {
       $where = " AND cc.id IN ({$cid}) ";
     }
-    $sql = "SELECT cc.id, cc.organization_name FROM civicrm_contact cc 
+    $sql = "SELECT cc.id, cc.organization_name FROM civicrm_contact cc
       INNER JOIN civicrm_financial_account cfa ON cfa.contact_id = cc.id AND cc.is_deleted = 0
       {$where}
       GROUP BY cc.id";
@@ -342,7 +342,7 @@ SUM(credit) as civicrm_financial_trxn_credit
     if (!empty($params['financial_account_id'])) {
       $financialAccountBalance->financial_account_id = $params['financial_account_id'];
       $financialAccountBalance->find(TRUE);
-    }  
+    }
     $financialAccountBalance->copyValues($params);
 
     $accountType = CRM_Core_PseudoConstant::accountOptionValues(
@@ -459,39 +459,36 @@ SUM(credit) as civicrm_financial_trxn_credit
   }
 
   /**
-   * Limit adding of Financial trxn to same month.
+   * Limit adding of a financial trxn to same month by checking the month and year of its transaction date.
+   *   Financial trxn is identified by $entityBatch->entity_id. If the month doesn't match
+   *   with month of financial trxn which are already added in batch then delete the $entityBatch record
+   *   and throw a error message.
    *
    * @param obj $params CRM_Batch_DAO_EntityBatch
    */
   public static function checkFinancialTrxnForBatch($entityBatch) {
-    if (!Civi::settings()->get('financial_batch_same_month')) {
-      return NULL;
-    }
-    if ($entityBatch->entity_table != 'civicrm_financial_trxn') {
+    if (!Civi::settings()->get('financial_batch_same_month') || ($entityBatch->entity_table != 'civicrm_financial_trxn')) {
       return NULL;
     }
     $batchId = $entityBatch->batch_id;
-    if (empty(self::$_batchFinancialTrxns[$batchId])) {
-      $batchTransactionMonth = CRM_Core_DAO::singleValueQuery("SELECT cft.trxn_date FROM `civicrm_entity_batch` ceb
-INNER JOIN civicrm_financial_trxn cft ON cft.id = ceb.entity_id AND ceb.batch_id = {$batchId}
-LIMIT 1");
-      self::$_batchFinancialTrxns[$batchId] = $batchTransactionMonth;
+    if (empty(self::$_batchFinancialTrxnDate[$batchId])) {
+      self::$_batchFinancialTrxnDate[$batchId] = CRM_Core_DAO::singleValueQuery("
+        SELECT DATE_FORMAT(cft.trxn_date, '%Y%m') FROM `civicrm_entity_batch` ceb
+        INNER JOIN civicrm_financial_trxn cft ON cft.id = ceb.entity_id AND ceb.batch_id = {$batchId}
+        LIMIT 1
+      ");
     }
-    else {
-      $batchTransactionMonth = self::$_batchFinancialTrxns[$batchId];
-    }
-    if ($batchTransactionMonth) {
-      $financialTrxnId = $entityBatch->entity_id;
-      $trxnDate = CRM_Core_DAO::getFieldValue('CRM_Financial_DAO_FinancialTrxn', $financialTrxnId, 'trxn_date');
-      $trxnMonth = date('Ym', strtotime($trxnDate));
-      $batchTransactionMonthYear = date('Ym', strtotime($batchTransactionMonth));
-      if ($trxnMonth != $batchTransactionMonthYear) {
+    if (!empty(self::$_batchFinancialTrxnDate[$batchId])) {
+      if (self::$_batchFinancialTrxnDate[$batchId] != date('Ym', strtotime(CRM_Core_DAO::getFieldValue('CRM_Financial_DAO_FinancialTrxn', $entityBatch->entity_id, "trxn_date")))) {
+        // Unassign the financial trxn which doesn't belong to same month of transactions which are already added in batch,
+        //  by deleting the $entityBatch entry and throwing a error message.
         $entityBatch->delete();
-	if (!self::$_setStatus) {
-	  self::$_setStatus = TRUE;
-	  $month = date('F', strtotime($batchTransactionMonth));
-	  $year = date('Y', strtotime($batchTransactionMonth));
-	  CRM_Core_Session::singleton()->set('batchTransactionStatus', ts("CiviCRM has been configured to require all transactions added to a batch to have their Transaction Date in the same calendar month. Please do not attempt to assign transactions that are not in {$month}, {$year} to this batch"));
+        if (!self::$_setStatus) {
+	         self::$_setStatus = TRUE;
+	         $month = date('F', mktime(0, 0, 0, substr(self::$_batchFinancialTrxnDate[$batchId], -2), 10));
+	         $year = substr(self::$_batchFinancialTrxnDate[$batchId], 0, 4);
+           // set the error message in session variable $batchTransactionStatus, later used in self::checkFinancialTrxnForBatchStatus(..)
+	         CRM_Core_Session::singleton()->set('batchTransactionStatus', ts("CiviCRM has been configured to require all transactions added to a batch to have their Transaction Date in the same calendar month. Please do not attempt to assign transactions that are not in {$month}, {$year} to this batch"));
         }
       }
     }
