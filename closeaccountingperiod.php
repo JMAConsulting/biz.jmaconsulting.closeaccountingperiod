@@ -531,6 +531,18 @@ function closeaccountingperiod_civicrm_validateForm($formName, &$fields, &$files
       $dateField = 'trxn_date';
     }
     $receiveDate = CRM_Utils_Array::value($dateField, $fields);
+
+    // Check if limit batch to same month is enabled and display error if attempted to add transaction into batch with different month.
+    // This piece of code depends on EasyBatch extension, the financial_batch_id check enforces this.
+    if (Civi::settings()->get('financial_batch_same_month') && $receiveDate && CRM_Utils_Array::value('financial_batch_id', $fields)) {
+      $batchValues = CRM_EasyBatch_BAO_EasyBatch::retrieve(array('batch_id' => $fields['financial_batch_id']));
+      if (date('Ym', strtotime($receiveDate)) != date('Ym', strtotime($batchValues['batch_date']))) {
+        $month = date('F', strtotime($batchValues['batch_date']));
+        $year = date('Y', strtotime($batchValues['batch_date']));
+        $errors['financial_batch_id'] = ts("CiviCRM has been configured to require all transactions added to a batch to have their Transaction Date in the same calendar month. Please do not attempt to assign transactions that are not in {$month}, {$year} to this batch");
+      }
+    }
+
     $financialTypeId = CRM_Utils_Array::value('financial_type_id', $fields);
     try {
       CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::checkReceiveDate($receiveDate, $financialTypeId);
