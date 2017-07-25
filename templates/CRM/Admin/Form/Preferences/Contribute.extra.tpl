@@ -8,6 +8,8 @@
     {/foreach}
   {/foreach}
 </div>
+<span id="htxtprior">
+  {help id="prior_financial_period"}</span>
 {/if}
 {literal}
   <script type="text/javascript">
@@ -25,6 +27,7 @@
         }
       }
       $("tr.crm-preferences-form-block-prior_financial_period td:nth-child(2)").html($('#orgs'));
+      $("tr.crm-preferences-form-block-prior_financial_period td:nth-child(1) label").append($('#htxtprior'));
     });
   </script>
 {/literal}
