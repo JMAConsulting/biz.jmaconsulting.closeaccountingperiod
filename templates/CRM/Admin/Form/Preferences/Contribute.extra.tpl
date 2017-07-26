@@ -9,7 +9,7 @@
   {/foreach}
 </div>
 <span id="htxtprior">
-  {help id="prior_financial_period"}</span>
+  {help id="prior_financial_period" file='CRM/Admin/Form/Preferences/PriorFinancialPeriod.hlp'}</span>
 {/if}
 {literal}
   <script type="text/javascript">
