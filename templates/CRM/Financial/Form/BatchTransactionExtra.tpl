@@ -18,9 +18,9 @@ CRM.$(function($) {
       if (op[0].toLowerCase() == 'assign') {
         url = CRM.url("civicrm/batch/checkFinancialTrxnForBatchStatus?reset=1");
         CRM.$.get(url, null, function( msg ) {
-	  if (msg) {
-            CRM.alert(msg, ts('Batch Transaction'), 'error');
-          }
+	  $.each(msg, function( index, value ) {
+            CRM.alert(value, ts('Batch Transaction'), 'error');
+          });
         }, 'json');
       }
     }

@@ -36,6 +36,10 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
 
   public static $_batchFinancialTrxnDate = NULL;
 
+  public static $_batchFinancialTrxnOrg = NULL;
+
+  public static $_contactsFinancialAccount = NULL;
+
   public static $_setStatus = NULL;
 
   public function __construct() {
@@ -475,6 +479,7 @@ SUM(credit) as civicrm_financial_trxn_credit
       self::$_batchFinancialTrxnDate[$batchId] = CRM_Core_DAO::singleValueQuery("
         SELECT DATE_FORMAT(cft.trxn_date, '%Y%m') FROM `civicrm_entity_batch` ceb
         INNER JOIN civicrm_financial_trxn cft ON cft.id = ceb.entity_id AND ceb.batch_id = {$batchId}
+          AND ceb.entity_table = 'civicrm_financial_trxn'
         LIMIT 1
       ");
     }
@@ -483,12 +488,50 @@ SUM(credit) as civicrm_financial_trxn_credit
         // Unassign the financial trxn which doesn't belong to same month of transactions which are already added in batch,
         //  by deleting the $entityBatch entry and throwing a error message.
         $entityBatch->delete();
-        if (!self::$_setStatus) {
-	         self::$_setStatus = TRUE;
-	         $month = date('F', mktime(0, 0, 0, substr(self::$_batchFinancialTrxnDate[$batchId], -2), 10));
-	         $year = substr(self::$_batchFinancialTrxnDate[$batchId], 0, 4);
-           // set the error message in session variable $batchTransactionStatus, later used in self::checkFinancialTrxnForBatchStatus(..)
-	         CRM_Core_Session::singleton()->set('batchTransactionStatus', ts("CiviCRM has been configured to require all transactions added to a batch to have their Transaction Date in the same calendar month. Please do not attempt to assign transactions that are not in {$month}, {$year} to this batch"));
+        if (empty(self::$_setStatus['same_month'])) {
+	  self::$_setStatus['same_month'] = TRUE;
+	  $month = date('F', mktime(0, 0, 0, substr(self::$_batchFinancialTrxnDate[$batchId], -2), 10));
+	  $year = substr(self::$_batchFinancialTrxnDate[$batchId], 0, 4);
+          // set the error message in session variable $batchTransactionStatus, later used in self::checkFinancialTrxnForBatchStatus(..)
+	  CRM_Core_Session::singleton()->set('batchTransactionStatus', ts("CiviCRM has been configured to require all transactions added to a batch to have their Transaction Date in the same calendar month. Please do not attempt to assign transactions that are not in {$month}, {$year} to this batch"));
+        }
+      }
+    }
+  }
+
+  /**
+   * Limit adding of a financial trxn to same company.
+   *
+   * @param obj $params CRM_Batch_DAO_EntityBatch
+   */
+  public static function checkFinancialTrxnForSameOrg($entityBatch) {
+   $batchId = $entityBatch->batch_id;
+    if (empty(self::$_batchFinancialTrxnOrg[$batchId])) {
+      self::$_batchFinancialTrxnOrg[$batchId] = CRM_Core_DAO::getFieldValue('CRM_EasyBatch_DAO_EasyBatchEntity', $batchId, 'contact_id', 'batch_id');
+      if (empty(self::$_batchFinancialTrxnOrg[$batchId])) {
+        self::$_batchFinancialTrxnOrg[$batchId] = CRM_Core_DAO::singleValueQuery("
+          SELECT cfa.contact_id FROM civicrm_financial_trxn cft
+          INNER JOIN civicrm_financial_account cfa ON cfa.id = cft.to_financial_account_id
+          INNER JOIN civicrm_entity_batch ceb ON cft.id = ceb.entity_id
+            AND ceb.entity_table = 'civicrm_financial_trxn' AND ceb.batch_id = {$batchId}
+          LIMIT 1
+        ");
+      }
+    }
+    if (!empty(self::$_batchFinancialTrxnOrg[$batchId])) {
+      $contactId = self::$_batchFinancialTrxnOrg[$batchId];
+      $query = "SELECT cfa.contact_id FROM civicrm_financial_trxn cft
+          INNER JOIN civicrm_financial_account cfa ON cfa.id = cft.to_financial_account_id
+           AND cfa.contact_id = {$contactId} AND cft.id = {$entityBatch->entity_id}";
+      if (!CRM_Core_DAO::singleValueQuery($query)) {
+        // Unassign the financial trxn which doesn't belong to same company,
+        //  by deleting the $entityBatch entry and throwing a error message.
+        $entityBatch->delete();
+        if (empty(self::$_setStatus['same_company'])) {
+	  self::$_setStatus['same_company'] = TRUE;
+          // set the error message in session variable $batchTransactionOrgStatus, later used in self::checkFinancialTrxnForBatchStatus(..)
+	  $companyName = CRM_Core_DAO::getFieldValue('CRM_Contact_BAO_Contact', self::$_batchFinancialTrxnOrg[$batchId], 'organization_name');
+	  CRM_Core_Session::singleton()->set('batchTransactionOrgStatus', ts("Selected financial transaction(s) doesn't belong to '{$companyName}'."));
         }
       }
     }
@@ -498,11 +541,18 @@ SUM(credit) as civicrm_financial_trxn_credit
    * Display Status
    */
   public static function checkFinancialTrxnForBatchStatus() {
-   $msg = CRM_Core_Session::singleton()->get('batchTransactionStatus');
-   if ($msg) {
-     CRM_Core_Session::singleton()->set('batchTransactionStatus', '');
-   }
-   CRM_Utils_JSON::output($msg);
+    $msg = CRM_Core_Session::singleton()->get('batchTransactionStatus');
+    $message = array();
+    if ($msg) {
+      $message[] = $msg;
+      CRM_Core_Session::singleton()->set('batchTransactionStatus', '');
+    }
+    $msg = CRM_Core_Session::singleton()->get('batchTransactionOrgStatus');
+    if ($msg) {
+      $message[] = $msg;
+      CRM_Core_Session::singleton()->set('batchTransactionOrgStatus', '');
+    }
+    CRM_Utils_JSON::output($message);
   }
 
 }

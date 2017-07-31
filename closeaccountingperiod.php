@@ -580,5 +580,6 @@ function _closeaccountingperiod_move_account_balance() {
 function closeaccountingperiod_civicrm_post($op, $objectName, $objectId, &$objectRef) {
   if ($objectName == 'EntityBatch' && $op == 'create') {
     CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::checkFinancialTrxnForBatch($objectRef);
+    CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::checkFinancialTrxnForSameOrg($objectRef);
   }
 }
