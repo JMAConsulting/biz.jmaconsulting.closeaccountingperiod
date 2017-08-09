@@ -446,7 +446,7 @@ SUM(credit) as civicrm_financial_trxn_credit
    * @param int $financialTypeId
    */
   public static function checkReceiveDate($receiveDate, $financialTypeId) {
-    if (!Civi::settings()->get('prevent_recording_trxn_closed_month')) {
+    if (!Civi::settings()->get('prevent_recording_trxn_closed_month') || !$financialTypeId) {
       return NULL;
     }
     $result = civicrm_api3('EntityFinancialAccount', 'getsingle', array(
