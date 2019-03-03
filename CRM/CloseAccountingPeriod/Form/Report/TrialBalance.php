@@ -93,6 +93,31 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
           ),
         ),
       ),
+      'civicrm_chapter_entity' => array(
+        'dao' => 'CRM_EFT_DAO_EFT',
+        'fields' => array(
+          'chapter_code_to' => array(
+            'title' => ts('Chapter Code Debit'),
+            'required' => TRUE,
+            'dbAlias' => 'financial_trxn_civireport.chapter_to',
+          ),
+          'chapter_code_from' => array(
+            'title' => ts('Chapter Code Credit'),
+            'required' => TRUE,
+            'dbAlias' => 'financial_trxn_civireport.chapter_from',
+          ),
+          'fund_code_to' => array(
+            'title' => ts('Fund Debit'),
+            'required' => TRUE,
+            'dbAlias' => 'financial_trxn_civireport.fund_to',
+          ),
+          'fund_code_from' => array(
+            'title' => ts('Fund Credit'),
+            'required' => TRUE,
+            'dbAlias' => 'financial_trxn_civireport.fund_from',
+          ),
+        ),
+      ),
     );
     parent::__construct();
   }
@@ -151,11 +176,25 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
       return NULL;
     }
     $creditAmount = $debitAmount = 0;
+    $chapterCodes = CRM_EFT_BAO_EFT::getCodes('chapter_codes');
+    $fundCodes = CRM_EFT_BAO_EFT::getCodes('fund_codes');
     foreach ($rows as &$row) {
       $creditAmount += $row['civicrm_financial_trxn_credit'];
       $debitAmount += $row['civicrm_financial_trxn_debit'];
       $row['civicrm_financial_trxn_credit'] = CRM_Utils_Money::format($row['civicrm_financial_trxn_credit']);
-      $row['civicrm_financial_trxn_debit'] = CRM_Utils_Money::format($row['civicrm_financial_trxn_debit']);    
+      $row['civicrm_financial_trxn_debit'] = CRM_Utils_Money::format($row['civicrm_financial_trxn_debit']);
+      if (CRM_Utils_Array::value('civicrm_chapter_entity_chapter_code_from', $row)) {
+        $row['civicrm_chapter_entity_chapter_code_from'] = $chapterCodes[$row['civicrm_chapter_entity_chapter_code_from']];
+      }
+      if (CRM_Utils_Array::value('civicrm_chapter_entity_chapter_code_to', $row)) {
+        $row['civicrm_chapter_entity_chapter_code_to'] = $chapterCodes[$row['civicrm_chapter_entity_chapter_code_to']];
+      }
+      if (CRM_Utils_Array::value('civicrm_chapter_entity_fund_code_from', $row)) {
+        $row['civicrm_chapter_entity_fund_code_from'] = $fundCodes[$row['civicrm_chapter_entity_fund_code_from']];
+      }
+      if (CRM_Utils_Array::value('civicrm_chapter_entity_fund_code_to', $row)) {
+        $row['civicrm_chapter_entity_fund_code_to'] = $fundCodes[$row['civicrm_chapter_entity_fund_code_to']];
+      }
     }
     $rows[] = array(
       'civicrm_financial_account_accounting_code' => ts('<b>Total Amount</b>'),

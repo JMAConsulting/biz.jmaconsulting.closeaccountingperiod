@@ -94,33 +94,50 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
     $from = "
       FROM (
         SELECT cft1.id, 0 as fid, 0 AS credit, cft1.total_amount AS debit,
-          cft1.to_financial_account_id AS financial_account_id
+          cft1.to_financial_account_id AS financial_account_id,
+          '' AS chapter_from, ce.chapter_code AS chapter_to, '' AS fund_from, ce.fund_code AS fund_to
           FROM civicrm_financial_trxn cft1
+          LEFT JOIN civicrm_chapter_entity ce ON ce.entity_id = cft1.id AND ce.entity_table = 'civicrm_financial_trxn'
           WHERE cft1.trxn_date {$where}
         UNION
-        SELECT cft2.id, 0 as fid, cft2.total_amount AS credit, 0 AS debit, cft2.from_financial_account_id
+        SELECT cft2.id, 0 as fid, cft2.total_amount AS credit, 0 AS debit, cft2.from_financial_account_id,
+          ce1.chapter_code AS chapter_from, '' AS chapter_to, ce1.fund_code AS fund_from, '' AS fund_to
           FROM civicrm_financial_trxn cft2
+          LEFT JOIN civicrm_entity_financial_trxn ceft1 ON ceft1.financial_trxn_id = cft2.id AND entity_table = 'civicrm_contribution'
+          LEFT JOIN civicrm_line_item li ON li.contribution_id = ceft1.entity_id
+          LEFT JOIN civicrm_chapter_entity ce1 ON ce1.entity_id = li.id AND ce1.entity_table = 'civicrm_line_item'
           WHERE cft2.trxn_date {$where}
         UNION
-        SELECT cft3.id, cfi3.id, 0 AS credit, cfi3.amount AS debit, cfi3.financial_account_id
+        SELECT cft3.id, cfi3.id, 0 AS credit, cfi3.amount AS debit, cfi3.financial_account_id,
+          '' AS chapter_from, ce2.chapter_code AS chapter_to, '' AS fund_from, ce2.fund_code AS fund_to
           FROM civicrm_financial_item cfi3
             INNER JOIN civicrm_entity_financial_trxn ceft3 ON cfi3.id = ceft3.entity_id
               AND ceft3.entity_table = 'civicrm_financial_item'
             INNER JOIN civicrm_financial_trxn cft3 ON ceft3.financial_trxn_id = cft3.id
               AND cft3.to_financial_account_id IS NULL
+            LEFT JOIN civicrm_chapter_entity ce2 ON ce2.entity_id = cft3.id AND ce2.entity_table = 'civicrm_financial_trxn'
           WHERE cfi3.transaction_date {$where}
         UNION
-        SELECT cft4.id, cfi4.id,  cfi4.amount AS credit, 0 AS debit, cfi4.financial_account_id
+        SELECT cft4.id, cfi4.id,  cfi4.amount AS credit, 0 AS debit, cfi4.financial_account_id,
+          ce3.chapter_code AS chapter_from, '' AS chapter_to, ce3.fund_code AS fund_from, '' AS fund_to
           FROM civicrm_financial_item cfi4
           INNER JOIN civicrm_entity_financial_trxn ceft4 ON cfi4.id=ceft4.entity_id
             AND ceft4.entity_table='civicrm_financial_item'
           INNER JOIN civicrm_financial_trxn cft4 ON ceft4.financial_trxn_id=cft4.id
             AND cft4.from_financial_account_id IS NULL
+          LEFT JOIN civicrm_chapter_entity ce3 ON ce3.entity_id = cfi4.id AND ce3.entity_table = 'civicrm_financial_item'
           WHERE cfi4.transaction_date {$where}
         UNION
-        SELECT 0 as tid, 0 as fid, IF (financial_account_type_id = " . array_search('Liability', $financialAccountType) . ", {$financialBalanceField}, 0) AS credit, IF (financial_account_type_id = " . array_search('Asset', $financialAccountType) . ", {$financialBalanceField}, 0) AS debit, cfa5.id
+        SELECT 0 as tid, 0 as fid, IF (financial_account_type_id = " . array_search('Liability', $financialAccountType) . ", {$financialBalanceField}, 0) AS credit, IF (financial_account_type_id = " . array_search('Asset', $financialAccountType) . ", {$financialBalanceField}, 0) AS debit, cfa5.id,
+          IF (financial_account_type_id = " . array_search('Liability', $financialAccountType) . ", cec.chapter_code, '') AS chapter_from,
+          IF (financial_account_type_id = " . array_search('Asset', $financialAccountType) . ", ced.chapter_code, '') AS chapter_to,
+          IF (financial_account_type_id = " . array_search('Liability', $financialAccountType) . ", cec.fund_code, '') AS fund_from,
+          IF (financial_account_type_id = " . array_search('Asset', $financialAccountType) . ", ced.fund_code, '') AS fund_to
           FROM civicrm_financial_account cfa5
           INNER JOIN civicrm_financial_accounts_balance cfab ON cfab.financial_account_id = cfa5.id
+          LEFT JOIN civicrm_chapter_entity cec ON cec.entity_id = cfa5.id AND cec.entity_table = 'civicrm_financial_item'
+          INNER JOIN civicrm_entity_financial_trxn ceft5 ON cfa5.id = ceft5.entity_id AND ceft5.entity_table = 'civicrm_financial_item'
+          LEFT JOIN civicrm_chapter_entity ced ON ced.entity_id = ceft5.financial_trxn_id AND ced.entity_table = 'civicrm_financial_trxn'
           WHERE cfa5.financial_account_type_id IN (" . implode(', ', $financialAccountTypes) . ") AND {$financialBalanceField} <> 0
 
       ) AS {$alias['civicrm_financial_trxn']}
@@ -134,8 +151,12 @@ SELECT financial_account_civireport.id as civicrm_financial_account_id,
 financial_account_civireport.name as civicrm_financial_account_name,
 financial_account_civireport.financial_account_type_id as civicrm_financial_account_financial_account_type_id,
 financial_account_civireport.accounting_code as civicrm_financial_account_accounting_code,
+chapter_to as chapter_code_debit,
+fund_to as fund_code_debit,
 SUM(debit) as civicrm_financial_trxn_debit,
-SUM(credit) as civicrm_financial_trxn_credit
+SUM(credit) as civicrm_financial_trxn_credit,
+chapter_from as chapter_code_credit,
+fund_from as fund_code_credit,
   {$from}
   WHERE {$alias['civicrm_financial_account']}.contact_id = %1
   GROUP BY financial_account_civireport.id
