@@ -373,7 +373,7 @@ function closeaccountingperiod_civicrm_preProcess($formName, &$form) {
         $contributeSettings['prevent_recording_trxn_closed_month'] = CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME;
       }
     }
-    $form->setVar('_settings', $contributeSettings);    
+    $form->setVar('_settings', $contributeSettings);
   }
 }
 

@@ -38,6 +38,8 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
    */
   public function __construct() {
     list($months, $years) = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getDates();
+    $priorFinancialMonth = date('n', strtotime(Civi::settings()->get('prior_financial_period') . ' + 1 month'));
+    $priorFinancialYear = date('Y', strtotime(Civi::settings()->get('prior_financial_period')));
     $this->_columns = array(
       'civicrm_financial_account' => array(
         'dao' => 'CRM_Financial_DAO_FinancialAccount',
@@ -50,12 +52,16 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
             'title' => ts('Accounting Code'),
             'required' => TRUE,
           ),
+          'financial_account_type_id' => array(
+            'title' => ts('Financial Account Type'),
+            'required' => TRUE,
+          ),
         ),
         'filters' => array(
           'contact_id' => array(
             'title' => ts('Organization Name'),
             'operatorType' => CRM_Report_Form::OP_SELECT,
-            'options' => array('' => '- Select Organization -') + CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getOrganizationNames(),
+            'options' => CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getOrganizationNames(),
             'type' => CRM_Utils_Type::T_INT,
           ),
         ),
@@ -81,7 +87,7 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
             'options' => $months,
             'type' => CRM_Utils_Type::T_INT,
             'pseudofield' => TRUE,
-            'default' => '',
+            'default' => $priorFinancialMonth,
           ),
           'trxn_date_year' => array(
             'title' => ts('Financial Period End Year'),
@@ -89,7 +95,25 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
             'options' => $years,
             'type' => CRM_Utils_Type::T_INT,
             'pseudofield' => TRUE,
-            'default' => '',
+            'default' => $priorFinancialYear,
+          ),
+          'prior_financial_month' => array(
+            'title' => ts('Prior Financial Period End Month'),
+            'operatorType' => CRM_Report_Form::OP_SELECT,
+            'options' => $months,
+            'type' => CRM_Utils_Type::T_INT,
+            'pseudofield' => TRUE,
+            'required' => TRUE,
+            'default' => date('n', strtotime(Civi::settings()->get('prior_financial_period'))),
+          ),
+          'prior_financial_year' => array(
+            'title' => ts('Prior Financial Period End Year'),
+            'operatorType' => CRM_Report_Form::OP_SELECT,
+            'options' => $years,
+            'type' => CRM_Utils_Type::T_INT,
+            'pseudofield' => TRUE,
+            'required' => TRUE,
+            'default' => date('Y', strtotime(Civi::settings()->get('prior_financial_period'))),
           ),
         ),
       ),
@@ -178,6 +202,7 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
     $creditAmount = $debitAmount = 0;
     $chapterCodes = CRM_EFT_BAO_EFT::getCodes('chapter_codes');
     $fundCodes = CRM_EFT_BAO_EFT::getCodes('fund_codes');
+    $financialAccountType = CRM_Core_OptionGroup::values('financial_account_type');
     foreach ($rows as &$row) {
       $creditAmount += $row['civicrm_financial_trxn_credit'];
       $debitAmount += $row['civicrm_financial_trxn_debit'];
@@ -194,6 +219,9 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
       }
       if (CRM_Utils_Array::value('civicrm_chapter_entity_fund_code_to', $row)) {
         $row['civicrm_chapter_entity_fund_code_to'] = $fundCodes[$row['civicrm_chapter_entity_fund_code_to']];
+      }
+      if (CRM_Utils_Array::value('civicrm_financial_account_financial_account_type_id', $row)) {
+        $row['civicrm_financial_account_financial_account_type_id'] = $financialAccountType[$row['civicrm_financial_account_financial_account_type_id']];
       }
     }
     $rows[] = array(
