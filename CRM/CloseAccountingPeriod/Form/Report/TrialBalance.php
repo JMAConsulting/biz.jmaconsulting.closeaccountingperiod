@@ -44,16 +44,12 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
       'civicrm_financial_account' => array(
         'dao' => 'CRM_Financial_DAO_FinancialAccount',
         'fields' => array(
-          'name' => array(
-            'title' => ts('Account'),
-            'required' => TRUE,
-          ),
           'accounting_code' => array(
             'title' => ts('Accounting Code'),
             'required' => TRUE,
           ),
-          'financial_account_type_id' => array(
-            'title' => ts('Financial Account Type'),
+          'name' => array(
+            'title' => ts('Account'),
             'required' => TRUE,
           ),
         ),
