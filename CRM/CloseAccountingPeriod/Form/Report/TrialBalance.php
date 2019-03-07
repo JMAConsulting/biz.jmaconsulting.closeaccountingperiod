@@ -62,6 +62,31 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
           ),
         ),
       ),
+      'civicrm_chapter_entity' => array(
+        'dao' => 'CRM_EFT_DAO_EFT',
+        'fields' => array(
+          'chapter_code_to' => array(
+            'title' => ts('Chapter Code Debit'),
+            'required' => TRUE,
+            'dbAlias' => 'financial_trxn_civireport.chapter_to',
+          ),
+          'chapter_code_from' => array(
+            'title' => ts('Chapter Code Credit'),
+            'required' => TRUE,
+            'dbAlias' => 'financial_trxn_civireport.chapter_from',
+          ),
+          'fund_code_to' => array(
+            'title' => ts('Fund Debit'),
+            'required' => TRUE,
+            'dbAlias' => 'financial_trxn_civireport.fund_to',
+          ),
+          'fund_code_from' => array(
+            'title' => ts('Fund Credit'),
+            'required' => TRUE,
+            'dbAlias' => 'financial_trxn_civireport.fund_from',
+          ),
+        ),
+      ),
       'civicrm_financial_trxn' => array(
         'dao' => 'CRM_Financial_DAO_FinancialTrxn',
         'fields' => array(
@@ -110,31 +135,6 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
             'pseudofield' => TRUE,
             'required' => TRUE,
             'default' => date('Y', strtotime($priorDate)),
-          ),
-        ),
-      ),
-      'civicrm_chapter_entity' => array(
-        'dao' => 'CRM_EFT_DAO_EFT',
-        'fields' => array(
-          'chapter_code_to' => array(
-            'title' => ts('Chapter Code Debit'),
-            'required' => TRUE,
-            'dbAlias' => 'financial_trxn_civireport.chapter_to',
-          ),
-          'chapter_code_from' => array(
-            'title' => ts('Chapter Code Credit'),
-            'required' => TRUE,
-            'dbAlias' => 'financial_trxn_civireport.chapter_from',
-          ),
-          'fund_code_to' => array(
-            'title' => ts('Fund Debit'),
-            'required' => TRUE,
-            'dbAlias' => 'financial_trxn_civireport.fund_to',
-          ),
-          'fund_code_from' => array(
-            'title' => ts('Fund Credit'),
-            'required' => TRUE,
-            'dbAlias' => 'financial_trxn_civireport.fund_from',
           ),
         ),
       ),
