@@ -54,7 +54,7 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
    *
    * @return string
    */
-  public static function getTrialBalanceQuery($alias, $onlyFromClause = FALSE, $contactId = NULL, $endDate = NULL) {
+  public static function getTrialBalanceQuery($alias, $onlyFromClause = FALSE, $contactId = NULL, $endDate = NULL, $priorEndDate = NULL) {
     $closingDate = NULL;
     if (!$onlyFromClause && Civi::settings()->get('closing_date')) {
       $closingDate = Civi::settings()->get('closing_date');
@@ -68,6 +68,9 @@ class CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod extends CRM_Core_DAO {
     $priorDate = NULL;
     if ($contactId) {
       $priorDate = CRM_CloseAccountingPeriod_BAO_CloseAccountingPeriod::getPriorFinancialPeriod($contactId);
+    }
+    if ($priorEndDate) {
+      $priorDate = $priorEndDate;
     }
     if (empty($priorDate)) {
       $where = " <= DATE('$closingDate') ";
@@ -392,7 +395,7 @@ fund_from as fund_code_credit,
   public static function getPriorFinancialPeriod($contactID) {
     $period = civicrm_api3('Setting', 'get', array(
       'contact_id' => $contactID,
-      'name' => 'prior_financial_period',
+      'name' => ['prior_financial_period'],
     ));
     $priorFinancialPeriod = CRM_Utils_Array::value('prior_financial_period', $period['values'][$period['id']]);
     if ($priorFinancialPeriod) {
