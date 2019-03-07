@@ -161,18 +161,7 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
   }
 
   public function orderBy() {
-    $this->_orderBy = " ORDER BY {$this->_aliases['civicrm_financial_account']}.name ";
-  }
-
- /**
-   * Set limit.
-   *
-   * @param int $rowCount
-   *
-   * @return array
-   */
-  public function limit($rowCount = self::ROW_COUNT_LIMIT) {
-    $this->_limit = NULL;
+    $this->_orderBy = " ORDER BY financial_account_civireport.accounting_code, financial_trxn_civireport.chapter_to, financial_trxn_civireport.chapter_from, financial_trxn_civireport.fund_to, financial_trxn_civireport.fund_from ";
   }
 
   /**
@@ -183,7 +172,7 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
   }
 
   public function groupBy() {
-    $this->_groupBy = " GROUP BY {$this->_aliases['civicrm_financial_account']}.id ";
+    $this->_groupBy = " GROUP BY financial_account_civireport.accounting_code, financial_trxn_civireport.chapter_to, financial_trxn_civireport.chapter_from, financial_trxn_civireport.fund_to, financial_trxn_civireport.fund_from ";
   }
 
   /**
