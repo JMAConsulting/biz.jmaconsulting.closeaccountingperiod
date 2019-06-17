@@ -69,7 +69,7 @@ class CRM_CloseAccountingPeriod_Form_PriorFinancialPeriod extends CRM_Core_Form 
     if ($priorFinancialPeriod) {
       $this->assign('priorFinancialPeriod', date('n', strtotime($priorFinancialPeriod)) . '-' . date('Y', strtotime($priorFinancialPeriod)));
     }
-    $this->add('date', 'prior_financial_period', ts('Prior Financial Period'), CRM_Core_SelectValues::date(NULL, 'M Y', 2, 5), TRUE);
+    $this->add('date', 'prior_financial_period', ts('Prior Financial Period'));
     $this->addButtons(array(
         array(
           'type' => 'cancel',

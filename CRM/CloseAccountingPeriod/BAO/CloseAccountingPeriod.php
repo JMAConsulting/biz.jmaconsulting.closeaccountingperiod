@@ -388,18 +388,7 @@ SUM(credit) as civicrm_financial_trxn_credit
    *
    */
   public static function setPriorFinancialPeriod($priorFinancialPeriod, $contactID) {
-    if (is_array($priorFinancialPeriod)) {
-      $priorFinancialPeriod = array(
-        'M' => $priorFinancialPeriod['M'],
-        'Y' => $priorFinancialPeriod['Y'],
-      );
-    }
-    else {
-      $priorFinancialPeriod = array(
-        'M' => date('m', strtotime($priorFinancialPeriod)),
-        'Y' => date('Y', strtotime($priorFinancialPeriod)),
-      );
-    }
+    $priorFinancialPeriod = date('Y-m-d', strtotime($priorFinancialPeriod));
     CRM_Core_BAO_Setting::setItem(
       $priorFinancialPeriod,
       CRM_Core_BAO_Setting::CONTRIBUTE_PREFERENCES_NAME,
