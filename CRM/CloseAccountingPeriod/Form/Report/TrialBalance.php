@@ -147,7 +147,7 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
     $from = CRM_Utils_Array::value("{$fieldName}_from", $this->_params);
     $to = CRM_Utils_Array::value("{$fieldName}_to", $this->_params);
     list($from, $to) = $this->getFromTo($relative, $from, $to, NULL, NULL);
-    $clauses = [];
+    $clauses = ['(1)'];
     if ($from) {
       $clauses[] = "( fieldName >= $from )";
     }
