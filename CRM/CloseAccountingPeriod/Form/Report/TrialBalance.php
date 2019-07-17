@@ -230,6 +230,9 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
       INNER JOIN civicrm_entity_financial_trxn ceft5 ON cfa5.id = ceft5.entity_id AND ceft5.entity_table = 'civicrm_financial_item'
       LEFT JOIN civicrm_chapter_entity ced ON ced.entity_id = ceft5.financial_trxn_id AND ced.entity_table = 'civicrm_financial_trxn'
       WHERE cfa5.financial_account_type_id IN (" . implode(', ', $financialAccountTypes) . ") AND {$financialBalanceField} <> 0
+      ) AS {$alias['civicrm_financial_trxn']}
+        INNER JOIN civicrm_financial_account {$alias['civicrm_financial_account']} ON {$alias['civicrm_financial_trxn']}.financial_account_id = {$alias['civicrm_financial_account']}.id
+
     ";
     $sql = str_replace('fieldName', 'cft4.trxn_date', $sql);
     $this->_from = $sql;
