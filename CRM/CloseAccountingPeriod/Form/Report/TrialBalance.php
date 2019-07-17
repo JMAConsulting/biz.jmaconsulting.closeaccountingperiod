@@ -226,12 +226,10 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
               IF (financial_account_type_id = " . array_search('Asset', $financialAccountType) . ", ced.fund_code, '') AS fund_to
       FROM civicrm_financial_account cfa5
       INNER JOIN civicrm_financial_accounts_balance cfab ON cfab.financial_account_id = cfa5.id
+      LEFT JOIN civicrm_chapter_entity cec ON cec.entity_id = cfa5.id AND cec.entity_table = 'civicrm_financial_item'
+      INNER JOIN civicrm_entity_financial_trxn ceft5 ON cfa5.id = ceft5.entity_id AND ceft5.entity_table = 'civicrm_financial_item'
+      LEFT JOIN civicrm_chapter_entity ced ON ced.entity_id = ceft5.financial_trxn_id AND ced.entity_table = 'civicrm_financial_trxn'
       WHERE cfa5.financial_account_type_id IN (" . implode(', ', $financialAccountTypes) . ") AND {$financialBalanceField} <> 0
-  ) AS {$this->_aliases['civicrm_financial_trxn']}
-  INNER JOIN civicrm_financial_account {$this->_aliases['civicrm_financial_account']} ON {$this->_aliases['civicrm_financial_trxn']}.financial_account_id = {$this->_aliases['civicrm_financial_account']}.id
-  LEFT JOIN civicrm_chapter_entity cec ON cec.entity_id = cfa5.id AND cec.entity_table = 'civicrm_financial_item'
-          INNER JOIN civicrm_entity_financial_trxn ceft5 ON cfa5.id = ceft5.entity_id AND ceft5.entity_table = 'civicrm_financial_item'
-          LEFT JOIN civicrm_chapter_entity ced ON ced.entity_id = ceft5.financial_trxn_id AND ced.entity_table = 'civicrm_financial_trxn'
     ";
     $sql = str_replace('fieldName', 'cft4.trxn_date', $sql);
     $this->_from = $sql;
