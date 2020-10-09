@@ -195,8 +195,8 @@ SUM(credit) as civicrm_financial_trxn_credit
     $rows[] = array(
       NULL,
       NULL,
-      CRM_Utils_Money::format($debit),
-      CRM_Utils_Money::format($credit),
+      CRM_Utils_Money::formatLocaleNumericRoundedByOptionalPrecision($debit, 9),
+      CRM_Utils_Money::formatLocaleNumericRoundedByOptionalPrecision($credit, 9),
     );
     $config = CRM_Core_Config::singleton();
     $fileName = $config->customFileUploadDir . CRM_Utils_File::makeFileName('TrialBalanceReport.csv');
