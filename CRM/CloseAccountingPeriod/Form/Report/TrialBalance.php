@@ -225,13 +225,13 @@ class CRM_CloseAccountingPeriod_Form_Report_TrialBalance extends CRM_Report_Form
     foreach ($rows as &$row) {
       $creditAmount += $row['civicrm_financial_trxn_credit'];
       $debitAmount += $row['civicrm_financial_trxn_debit'];
-      $row['civicrm_financial_trxn_credit'] = CRM_Utils_Money::format($row['civicrm_financial_trxn_credit']);
-      $row['civicrm_financial_trxn_debit'] = CRM_Utils_Money::format($row['civicrm_financial_trxn_debit']);
+      $row['civicrm_financial_trxn_credit'] = CRM_Utils_Money::formatLocaleNumericRoundedByOptionalPrecision($row['civicrm_financial_trxn_credit'], 9);
+      $row['civicrm_financial_trxn_debit'] = CRM_Utils_Money::formatLocaleNumericRoundedByOptionalPrecision($row['civicrm_financial_trxn_debit'], 9);
     }
     $rows[] = array(
       'civicrm_financial_account_accounting_code' => ts('<b>Total Amount</b>'),
-      'civicrm_financial_trxn_debit' => '<b>' . CRM_Utils_Money::format($debitAmount) . '</b>',
-      'civicrm_financial_trxn_credit' => '<b>' . CRM_Utils_Money::format($creditAmount) . '</b>',
+      'civicrm_financial_trxn_debit' => '<b>' . CRM_Utils_Money::formatLocaleNumericRoundedByOptionalPrecision($debitAmount, 9) . '</b>',
+      'civicrm_financial_trxn_credit' => '<b>' . CRM_Utils_Money::formatLocaleNumericRoundedByOptionalPrecision($creditAmount, 9) . '</b>',
     );
   }
 
